@@ -1,0 +1,131 @@
+
+
+Lo que encontraste:
+
+node_modules/tinyglobby/node_modules/fdir/dist/index.mjs
+node_modules/yargs/lib/platform-shims/esm.mjs
+
+Eso NO es tu código.
+Eso es código ESM puro (.mjs) dentro de dependencias internas.
+
+Y acá está la clave 👇
+
+🎯 El problema real
+
+Tenés alguna dependencia que:
+
+trae archivos .mjs
+
+usa import.meta
+
+y Expo Web (SDK 54) los está intentando ejecutar como si fueran CommonJS
+
+Eso rompe con:
+
+Cannot use 'import.meta' outside a module
+
+🔎 El sospechoso más común
+
+Por lo que aparece (tinyglobby, yargs, fdir), esto suele venir de:
+
+librerías CLI incluidas accidentalmente
+
+herramientas de build importadas en runtime
+
+o algo como glob, globby, sharp, etc.
+
+Y eso NO debería ejecutarse en el cliente web.
+
+💥 Pregunta directa (clave)
+
+¿Estás importando algo que sea de:
+
+filesystem (fs)
+
+path
+
+glob
+
+algún script de Node
+
+alguna lib pensada para backend
+
+en código que corre en la app?
+
+Porque si sí → ahí está el error.
+
+🚨 Lo que está pasando técnicamente
+
+Expo Web está intentando bundlear algo que es:
+
+import.meta.url
+
+Pero Metro/Webpack no lo está tratando como módulo ES.
+
+Eso solo pasa cuando una dependencia de Node se está colando en el bundle del navegador.
+
+🧠 Hagamos esto profesionalmente
+
+Corré:
+
+npm ls tinyglobby
+
+y
+
+npm ls yargs
+
+Quiero ver qué paquete lo está trayendo.
+
+🎯 Solución probable (90% de chances)
+
+Alguna dependencia tuya está pensada para:
+
+Node
+
+CLI
+
+backend
+
+Y no debe estar en una app React Native.
+
+Puede ser algo como:
+
+un generador de PDF server-side
+
+alguna lib de scraping
+
+alguna herramienta de build mal instalada como dependencia normal en vez de devDependency
+
+🧨 También revisá esto
+
+En tu package.json:
+
+¿Tenés algo raro en "dependencies" que debería estar en "devDependencies"?
+
+Ejemplo típico:
+
+"dependencies": {
+  "globby": "...",
+  "yargs": "...",
+  "eslint": "...",
+  "typescript": "..."
+}
+
+Eso en una app RN es sospechoso.
+
+🧠 Resumen claro
+
+No es Babel.
+No es Expo config.
+No es duplicate modules.
+
+Es una dependencia de Node colándose en el bundle web.
+
+Mandame el resultado de:
+
+npm ls tinyglobby
+npm ls yargs
+
+Y tu dependencies del package.json.
+
+Lo encontramos en un tiro. 💪
