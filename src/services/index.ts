@@ -1,11 +1,12 @@
-import { MockAuthService } from './mock/mockAuthService';
-import { MockBookService } from './mock/mockBookService';
-import { MockQuizService } from './mock/mockQuizService';
-import { MockUserService } from './mock/mockUserService';
-import { MockLeaderboardService } from './mock/mockLeaderboardService';
+import apiClient from './api/client';
+import { RealAuthService } from './real/realAuthService';
+import { RealBookService } from './real/realBookService';
+import { RealQuizService } from './real/realQuizService';
+import { RealUserService } from './real/realUserService';
+import { RealLeaderboardService } from './real/realLeaderboardService';
 
-export const authService = new MockAuthService();
-export const bookService = new MockBookService();
-export const quizService = new MockQuizService();
-export const userService = new MockUserService();
-export const leaderboardService = new MockLeaderboardService();
+export const authService = new RealAuthService(apiClient);
+export const bookService = new RealBookService(apiClient);
+export const quizService = new RealQuizService(apiClient);
+export const userService = new RealUserService(apiClient);
+export const leaderboardService = new RealLeaderboardService(apiClient);

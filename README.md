@@ -1,92 +1,86 @@
 # books-mb
 
-Aplicacion movil de lectura competitiva. Los usuarios hacen login, eligen un libro, responden un quiz de 10 preguntas sobre ese libro y acumulan puntos segun la dificultad. Un ranking mundial muestra a los mejores lectores.
+Aplicación móvil de lectura competitiva. Los usuarios hacen login con Google, eligen un libro del catálogo, responden un quiz de 10 preguntas y acumulan puntos según la dificultad del libro. Un ranking mundial muestra a los mejores lectores.
 
 ## Historia de usuario
 
-1. El usuario abre la app y se encuentra con la pantalla de login. Inicia sesion con su cuenta de Google.
-2. Una vez autenticado, ve el **catalogo de libros**. Puede buscar por titulo o autor y filtrar por dificultad (facil, medio, dificil).
-3. Al tocar un libro, ve el **detalle**: titulo, autor, descripcion, cantidad de paginas, dificultad y cuantos puntos vale cada respuesta correcta.
-4. Presiona **"Empezar Quiz"** y se le presentan 10 preguntas de multiple choice (4 opciones, 1 correcta), una a la vez. Puede navegar entre preguntas antes de enviar.
-5. Al enviar, ve la **pantalla de resultado**: cuantas acerto, cuantos puntos gano y un desglose pregunta por pregunta.
-6. Los puntos se suman a su perfil. Desde la tab **"Perfil"** puede ver su total de puntos, libros completados y cerrar sesion.
-7. En la tab **"Ranking"** ve el leaderboard mundial ordenado por puntos, con su posicion resaltada.
+1. El usuario abre la app y ve la pantalla de login. Inicia sesión con su cuenta de Google.
+2. Una vez autenticado, ve el **catálogo de libros**. Puede buscar por título o autor y filtrar por dificultad (fácil, medio, difícil).
+3. Al tocar un libro ve el **detalle**: título, autor, descripción, cantidad de páginas, dificultad y cuántos puntos vale cada respuesta correcta.
+4. Presiona **"Empezar Quiz"** y se le presentan 10 preguntas de múltiple choice (4 opciones, 1 correcta), una a la vez. Puede navegar entre preguntas antes de enviar.
+5. Al enviar ve la **pantalla de resultado**: cuántas acertó, cuántos puntos ganó y un desglose pregunta por pregunta.
+6. Los puntos se suman a su perfil. Desde la tab **Perfil** puede ver sus estadísticas y cerrar sesión.
+7. En la tab **Ranking** ve el leaderboard mundial ordenado por puntos, con su posición resaltada.
 
-## De donde salen los libros
+## Estado actual
 
-El catalogo de libros se sirve desde el backend via API REST. Actualmente la app usa datos mock con 10 libros de ejemplo (El Principito, 1984, Cien Anos de Soledad, etc.). Cada libro tiene un nivel de dificultad asignado que determina cuantos puntos vale.
+- **Backend conectado**: la app consume datos reales desde `books-api` (Flask + PostgreSQL).
+- **10 libros** disponibles con **100 preguntas** (10 por libro), servidos desde la base de datos.
+- **Auth**: el flujo de Google OAuth todavía usa un token mock. El backend ya valida tokens reales de Google; falta integrar `expo-auth-session` en la app.
+- **Scoring**: calculado en el servidor y devuelto al cliente.
+- **Perfil y leaderboard**: datos reales de la base de datos.
 
-Cuando el backend este listo, los libros se cargan desde una base de datos PostgreSQL. La idea es que el catalogo incluya los libros mas conocidos y leidos, organizados por dificultad.
+## Sistema de puntuación
 
-## De donde salen las preguntas
-
-Las 10 preguntas de cada libro son generadas por una **IA** (proveedor por definir: Claude, OpenAI u otro). El flujo es:
-
-1. El usuario pide hacer el quiz de un libro.
-2. La app llama al endpoint `GET /books/:id/questions` del backend.
-3. El backend envia el titulo y autor del libro a la IA con un prompt que le pide generar 10 preguntas de comprension lectora con 4 opciones y 1 correcta.
-4. El backend devuelve las preguntas a la app (sin la respuesta correcta).
-5. Al enviar el quiz, la app manda las respuestas al backend (`POST /quiz/submit`), que las evalua y devuelve el resultado con los puntos.
-
-Actualmente la app usa preguntas mock hardcodeadas para 2 libros (El Principito y 1984).
-
-## Sistema de puntuacion
-
-Los puntos por respuesta correcta dependen de la dificultad del libro:
-
-| Dificultad | Puntos por correcta | Maximo por quiz |
+| Dificultad | Puntos por correcta | Máximo por quiz |
 |------------|---------------------|-----------------|
-| Facil      | 1                   | 10              |
+| Fácil      | 1                   | 10              |
 | Medio      | 2                   | 20              |
-| Dificil    | 3                   | 30              |
+| Difícil    | 3                   | 30              |
 
-La logica esta en `src/utils/scoring.ts`.
-
-## Navegacion
-
-La app usa React Navigation con dos niveles:
+## Navegación
 
 ```
-RootStack (Stack Navigator) - controla si el usuario esta autenticado
+RootStack (Stack)          — controla si el usuario está autenticado
 │
-├── AuthScreen                    (no autenticado)
+├── AuthScreen             — no autenticado
 │
-└── MainTabs (Tab Navigator)      (autenticado)
-    ├── Tab: Libros → CatalogScreen
-    ├── Tab: Ranking → LeaderboardScreen
-    └── Tab: Perfil → ProfileScreen
+└── MainTabs (Tab)         — autenticado
+    ├── Libros  → CatalogScreen
+    ├── Ranking → LeaderboardScreen
+    └── Perfil  → ProfileScreen
 
-    Pantallas de drill-down (stack sobre las tabs):
-    ├── BookDetailScreen          (desde Catalogo, al tocar un libro)
-    ├── QuizScreen                (desde Detalle, al presionar "Empezar Quiz")
-    └── QuizResultScreen          (desde Quiz, al enviar respuestas)
+    Pantallas de drill-down:
+    ├── BookDetailScreen   — al tocar un libro
+    ├── QuizScreen         — al presionar "Empezar Quiz"
+    └── QuizResultScreen   — al enviar las respuestas
 ```
-
-El auth gating esta en `src/navigation/RootNavigator.tsx`: si el usuario esta autenticado ve las tabs, si no ve la pantalla de login.
 
 ## Arquitectura de servicios
 
-La app esta desacoplada del backend mediante una capa de servicios con interfaces:
+La app está desacoplada del backend mediante interfaces TypeScript. La implementación se elige en un solo lugar (`src/services/index.ts`):
 
 ```
 src/services/
-├── interfaces/        ← contratos (IAuthService, IBookService, IQuizService, etc.)
-├── mock/              ← implementaciones mock para desarrollo sin backend
-├── api/client.ts      ← instancia axios con JWT automatico
-└── index.ts           ← aca se elige cual implementacion usar (mock o real)
+├── interfaces/          ← contratos: IAuthService, IBookService, IQuizService, IUserService, ILeaderboardService
+├── mock/                ← implementaciones con datos hardcodeados (no usadas en producción)
+├── real/                ← implementaciones que consumen la API REST
+│   ├── realAuthService.ts
+│   ├── realBookService.ts
+│   ├── realQuizService.ts
+│   ├── realUserService.ts
+│   └── realLeaderboardService.ts
+├── api/client.ts        ← instancia Axios; agrega el JWT automáticamente en cada request
+└── index.ts             ← exporta los servicios activos (actualmente: real)
 ```
 
-Para conectar el backend real, se crean implementaciones en `src/services/real/` y se cambia el import en `src/services/index.ts`.
+Para volver a los mocks (desarrollo offline), en `src/services/index.ts` reemplazar las importaciones de `real/` por las de `mock/`.
 
-## Stack tecnico
+## Cómo funciona el token JWT
 
-- **React Native** con **Expo** SDK 54
-- **TypeScript** 5.9
-- **React Navigation** (native stack + bottom tabs)
-- **Zustand** para estado global (autenticacion)
-- **Axios** como HTTP client
-- **expo-auth-session** para Google OAuth (preparado, actualmente mock)
-- **expo-secure-store** para almacenar tokens JWT
+El `accessToken` que devuelve el backend al hacer login se guarda en el store de Zustand (persistido en `AsyncStorage` bajo la clave `auth-storage`). El interceptor de Axios lee ese valor y lo inyecta como `Authorization: Bearer <token>` en cada request automáticamente.
+
+## Stack técnico
+
+| Tecnología | Uso |
+|---|---|
+| React Native + Expo SDK 54 | Framework mobile |
+| TypeScript 5.9 | Tipado |
+| React Navigation | Navegación (stack + bottom tabs) |
+| Zustand | Estado global (autenticación) |
+| Axios | HTTP client con interceptor JWT |
+| expo-auth-session | Google OAuth (preparado, pendiente de integrar) |
+| AsyncStorage | Persistencia del store de autenticación |
 
 ## Levantar el proyecto
 
@@ -95,10 +89,19 @@ npm install
 npx expo start
 ```
 
-Escanear el QR con Expo Go (celular) o presionar `a` para Android / `i` para iOS.
+Escanear el QR con Expo Go (dispositivo) o presionar `a` (Android) / `i` (iOS).
+
+> El backend debe estar corriendo. Ver instrucciones en `../books-api/README.md`.
+
+## Pendiente
+
+- [ ] **Google OAuth real**: reemplazar el token mock en `src/hooks/useGoogleAuth.ts` por el flujo real con `expo-auth-session`. Requiere un Google Client ID configurado tanto en la app como en el backend (`.env`).
+- [ ] **Portadas de libros**: agregar URLs de imágenes reales a los libros en la base de datos (`cover_url`).
+- [ ] **Refresh automático de token**: cuando el backend devuelve 401, llamar a `/auth/refresh` y reintentar. Implementar en el interceptor de respuesta en `src/services/api/client.ts`.
+- [ ] **URL del backend configurable**: mover `API_BASE_URL` en `src/services/api/client.ts` a una variable de entorno (`app.config.ts` con `extra`), para no tener que editar código al cambiar de entorno.
 
 ## Verificar tipos
 
 ```bash
-npx tsc --noEmit
+node_modules/.bin/tsc --noEmit
 ```
