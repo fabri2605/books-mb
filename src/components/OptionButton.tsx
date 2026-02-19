@@ -1,4 +1,5 @@
 import { StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { Colors } from '../theme';
 
 interface Props {
   label: string;
@@ -9,19 +10,33 @@ interface Props {
 }
 
 export default function OptionButton({ label, selected, onPress, disabled, state = 'default' }: Props) {
-  const bgColor =
-    state === 'correct' ? '#27ae60'
-    : state === 'incorrect' ? '#e74c3c'
-    : selected ? '#4A90D9'
-    : '#f0f0f0';
+  const isCorrect = state === 'correct';
+  const isIncorrect = state === 'incorrect';
 
-  const textColor = selected || state !== 'default' ? '#fff' : '#333';
+  const bgColor =
+    isCorrect ? 'rgba(74,124,95,0.12)'
+    : isIncorrect ? 'rgba(192,57,43,0.12)'
+    : selected ? 'rgba(212,130,26,0.1)'
+    : Colors.paper;
+
+  const borderColor =
+    isCorrect ? Colors.sage
+    : isIncorrect ? Colors.red
+    : selected ? Colors.amber
+    : Colors.dust;
+
+  const textColor =
+    isCorrect ? Colors.sage
+    : isIncorrect ? Colors.red
+    : selected ? Colors.amber
+    : Colors.ink;
 
   return (
     <TouchableOpacity
-      style={[styles.button, { backgroundColor: bgColor }]}
+      style={[styles.button, { backgroundColor: bgColor, borderColor }]}
       onPress={onPress}
       disabled={disabled}
+      activeOpacity={0.75}
     >
       <Text style={[styles.text, { color: textColor }]}>{label}</Text>
     </TouchableOpacity>
@@ -31,9 +46,14 @@ export default function OptionButton({ label, selected, onPress, disabled, state
 const styles = StyleSheet.create({
   button: {
     paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    marginVertical: 6,
+    paddingHorizontal: 18,
+    borderRadius: 12,
+    marginVertical: 5,
+    borderWidth: 1.5,
   },
-  text: { fontSize: 16 },
+  text: {
+    fontSize: 14,
+    fontWeight: '500',
+    lineHeight: 20,
+  },
 });

@@ -1,5 +1,6 @@
 import { StyleSheet, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { Difficulty } from '../types';
+import { Colors } from '../theme';
 
 interface Props {
   selected: Difficulty | null;
@@ -35,14 +36,27 @@ export default function FilterChips({ selected, onSelect }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { paddingHorizontal: 16, paddingBottom: 8, gap: 8 },
+  container: { paddingBottom: 4, gap: 8 },
   chip: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 7,
     borderRadius: 20,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: Colors.paper,
+    borderWidth: 1.5,
+    borderColor: Colors.dust,
   },
-  chipActive: { backgroundColor: '#4A90D9' },
-  chipText: { fontSize: 14, color: '#333' },
-  chipTextActive: { color: '#fff', fontWeight: '600' },
+  chipActive: {
+    backgroundColor: Colors.amber,
+    borderColor: Colors.amber,
+  },
+  chipText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#7a6f5e',
+    letterSpacing: 0.3,
+  },
+  chipTextActive: {
+    color: Colors.white,
+    fontWeight: '700',
+  },
 });

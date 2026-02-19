@@ -6,6 +6,7 @@ import { RootStackParamList, Book } from '../types';
 import { bookService } from '../services';
 import { POINTS_PER_CORRECT } from '../utils/scoring';
 import DifficultyBadge from '../components/DifficultyBadge';
+import { Colors, coverColor } from '../theme';
 
 type RouteProps = NativeStackScreenProps<RootStackParamList, 'BookDetail'>['route'];
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -26,7 +27,7 @@ export default function BookDetailScreen() {
   if (loading || !book) {
     return (
       <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#4A90D9" />
+        <ActivityIndicator size="large" color={Colors.amber} />
       </View>
     );
   }
@@ -35,49 +36,119 @@ export default function BookDetailScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.coverPlaceholder}>
-        <Text style={styles.coverLetter}>{book.title[0]}</Text>
+      {/* Cover */}
+      <View style={[styles.cover, { backgroundColor: coverColor(book.id.charCodeAt(0) % 8) }]}>
+        <Text style={styles.coverTitle}>{book.title}</Text>
+        <Text style={styles.coverAuthor}>{book.author}</Text>
       </View>
-      <Text style={styles.title}>{book.title}</Text>
-      <Text style={styles.author}>{book.author}</Text>
-      <View style={styles.metaRow}>
-        <DifficultyBadge difficulty={book.difficulty} />
-        <Text style={styles.pages}>{book.pageCount} páginas</Text>
+
+      {/* Info */}
+      <View style={styles.infoCard}>
+        <Text style={styles.title}>{book.title}</Text>
+        <Text style={styles.author}>{book.author}</Text>
+
+        <View style={styles.metaRow}>
+          <DifficultyBadge difficulty={book.difficulty} />
+          <Text style={styles.pages}>{book.pageCount} págs.</Text>
+          <Text style={styles.ptsTag}>{pointsPerQuestion * 10} pts/quiz</Text>
+        </View>
+
+        <Text style={styles.description}>{book.description}</Text>
+
+        <TouchableOpacity
+          style={styles.quizButton}
+          onPress={() => navigation.navigate('Quiz', { bookId: book.id })}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.quizButtonText}>Empezar Quiz</Text>
+        </TouchableOpacity>
       </View>
-      <Text style={styles.points}>
-        {pointsPerQuestion} {pointsPerQuestion === 1 ? 'punto' : 'puntos'} por respuesta correcta
-      </Text>
-      <Text style={styles.description}>{book.description}</Text>
-      <TouchableOpacity
-        style={styles.quizButton}
-        onPress={() => navigation.navigate('Quiz', { bookId: book.id })}
-      >
-        <Text style={styles.quizButtonText}>Empezar Quiz</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  content: { alignItems: 'center', padding: 24 },
-  loaderContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  coverPlaceholder: {
-    width: 120,
-    height: 160,
-    backgroundColor: '#4A90D9',
-    borderRadius: 12,
+  container: {
+    flex: 1,
+    backgroundColor: Colors.cream,
+  },
+  content: {
+    paddingBottom: 32,
+  },
+  loaderContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    backgroundColor: Colors.cream,
   },
-  coverLetter: { color: '#fff', fontSize: 48, fontWeight: 'bold' },
-  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 4 },
-  author: { fontSize: 16, color: '#666', marginBottom: 16 },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 },
-  pages: { fontSize: 14, color: '#999' },
-  points: { fontSize: 14, color: '#4A90D9', fontWeight: '600', marginBottom: 16 },
-  description: { fontSize: 15, color: '#444', lineHeight: 22, textAlign: 'center', marginBottom: 32 },
-  quizButton: { backgroundColor: '#27ae60', paddingHorizontal: 40, paddingVertical: 16, borderRadius: 10 },
-  quizButtonText: { color: '#fff', fontSize: 18, fontWeight: '700' },
+  cover: {
+    height: 260,
+    justifyContent: 'flex-end',
+    padding: 24,
+  },
+  coverTitle: {
+    color: 'rgba(255,255,255,0.95)',
+    fontSize: 22,
+    fontWeight: '800',
+    lineHeight: 28,
+    marginBottom: 4,
+  },
+  coverAuthor: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 14,
+  },
+  infoCard: {
+    backgroundColor: Colors.cream,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    marginTop: -20,
+    padding: 24,
+    gap: 12,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: Colors.ink,
+  },
+  author: {
+    fontSize: 15,
+    color: '#7a6f5e',
+    marginTop: -6,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  pages: {
+    fontSize: 12,
+    color: '#9a8f7e',
+  },
+  ptsTag: {
+    fontSize: 12,
+    color: Colors.amber,
+    fontWeight: '600',
+  },
+  description: {
+    fontSize: 14,
+    color: '#5a4f3e',
+    lineHeight: 22,
+  },
+  quizButton: {
+    backgroundColor: Colors.amber,
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginTop: 8,
+    shadowColor: Colors.amber,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  quizButtonText: {
+    color: Colors.white,
+    fontSize: 16,
+    fontWeight: '700',
+  },
 });

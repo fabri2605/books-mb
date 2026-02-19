@@ -28,6 +28,8 @@ App con flujo completo funcional usando datos mock:
 ```
 books-mb/
 ├── App.tsx                          # Entry point — NavigationContainer + RootNavigator
+├── babel.config.js                  # Babel config con babel-preset-expo
+├── metro.config.js                  # Metro config — fuerza CJS para evitar import.meta en web
 ├── src/
 │   ├── components/
 │   │   ├── BookCard.tsx             # Card de libro para el catálogo
@@ -73,9 +75,15 @@ books-mb/
 - [ ] Crear implementaciones reales en `src/services/real/`
 - [ ] Agregar imágenes de portada de libros
 
+## Notas técnicas
+
+- **Web (Metro)**: Zustand v5 publica `.mjs` con `import.meta.env`. Metro no lo soporta, así que `metro.config.js` fuerza condiciones CJS (`react-native`, `require`, `default`). Si se agrega otra dependencia ESM-only que rompa web, revisar esa config.
+- Siempre usar `--clear` después de cambiar configs de Metro/Babel.
+
 ## Comandos útiles
 
 ```bash
 npx expo start          # Iniciar servidor de desarrollo
+npx expo start --web --clear  # Web con caché limpia
 npx tsc --noEmit        # Verificar tipos TypeScript
 ```

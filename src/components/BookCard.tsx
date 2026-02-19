@@ -1,22 +1,28 @@
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { Book } from '../types';
 import DifficultyBadge from './DifficultyBadge';
+import { Colors, coverColor } from '../theme';
+import { POINTS_PER_CORRECT } from '../utils/scoring';
 
 interface Props {
   book: Book;
   onPress: () => void;
+  index?: number;
 }
 
-export default function BookCard({ book, onPress }: Props) {
+export default function BookCard({ book, onPress, index = 0 }: Props) {
+  const pts = POINTS_PER_CORRECT[book.difficulty];
+
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress}>
-      <View style={styles.cover}>
-        <Text style={styles.coverText}>{book.title[0]}</Text>
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
+      <View style={[styles.cover, { backgroundColor: coverColor(index) }]}>
+        <Text style={styles.coverTitle} numberOfLines={3}>{book.title}</Text>
+        <Text style={styles.coverAuthor} numberOfLines={1}>{book.author}</Text>
       </View>
-      <View style={styles.info}>
-        <Text style={styles.title} numberOfLines={2}>{book.title}</Text>
-        <Text style={styles.author} numberOfLines={1}>{book.author}</Text>
+      <Text style={styles.title} numberOfLines={2}>{book.title}</Text>
+      <View style={styles.meta}>
         <DifficultyBadge difficulty={book.difficulty} />
+        <Text style={styles.pts}>{pts * 10} pts</Text>
       </View>
     </TouchableOpacity>
   );
@@ -24,29 +30,47 @@ export default function BookCard({ book, onPress }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 12,
-    marginHorizontal: 16,
-    marginVertical: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    flex: 1,
   },
   cover: {
-    width: 60,
-    height: 80,
-    backgroundColor: '#4A90D9',
-    borderRadius: 8,
+    width: '100%',
+    height: 160,
+    borderRadius: 10,
+    marginBottom: 8,
+    padding: 10,
     justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  coverText: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
-  info: { flex: 1, justifyContent: 'space-between' },
-  title: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
-  author: { fontSize: 13, color: '#666', marginBottom: 8 },
+  coverTitle: {
+    color: 'rgba(255,255,255,0.92)',
+    fontSize: 11,
+    fontWeight: '700',
+    lineHeight: 15,
+    marginBottom: 4,
+  },
+  coverAuthor: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 9,
+  },
+  title: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.ink,
+    lineHeight: 16,
+    marginBottom: 4,
+  },
+  meta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  pts: {
+    fontSize: 10,
+    color: Colors.sage,
+    fontWeight: '600',
+  },
 });

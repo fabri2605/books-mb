@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
+import { Colors } from '../theme';
 
 interface Props {
   label: string;
@@ -7,7 +8,7 @@ interface Props {
 
 export default function StatCard({ label, value }: Props) {
   return (
-    <View style={styles.card}>
+    <View style={styles.stat}>
       <Text style={styles.value}>{value}</Text>
       <Text style={styles.label}>{label}</Text>
     </View>
@@ -15,13 +16,25 @@ export default function StatCard({ label, value }: Props) {
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#f8f8f8',
-    borderRadius: 12,
-    padding: 16,
+  stat: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
     alignItems: 'center',
-    minWidth: 120,
+    borderRightWidth: 1,
+    borderRightColor: 'rgba(255,255,255,0.08)',
   },
-  value: { fontSize: 28, fontWeight: 'bold', color: '#333' },
-  label: { fontSize: 12, color: '#999', marginTop: 4 },
+  value: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.amberLight,
+  },
+  label: {
+    fontSize: 9,
+    color: '#6a6055',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginTop: 2,
+    fontWeight: '600',
+  },
 });

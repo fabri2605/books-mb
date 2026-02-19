@@ -1,10 +1,17 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { Difficulty } from '../types';
+import { Colors } from '../theme';
 
-const COLORS: Record<Difficulty, string> = {
-  easy: '#27ae60',
-  medium: '#f39c12',
-  hard: '#e74c3c',
+const BG_COLORS: Record<Difficulty, string> = {
+  easy: 'rgba(74,124,95,0.12)',
+  medium: 'rgba(212,130,26,0.12)',
+  hard: 'rgba(192,57,43,0.12)',
+};
+
+const TEXT_COLORS: Record<Difficulty, string> = {
+  easy: Colors.sage,
+  medium: Colors.amber,
+  hard: Colors.red,
 };
 
 const LABELS: Record<Difficulty, string> = {
@@ -19,13 +26,24 @@ interface Props {
 
 export default function DifficultyBadge({ difficulty }: Props) {
   return (
-    <View style={[styles.badge, { backgroundColor: COLORS[difficulty] }]}>
-      <Text style={styles.text}>{LABELS[difficulty]}</Text>
+    <View style={[styles.badge, { backgroundColor: BG_COLORS[difficulty] }]}>
+      <Text style={[styles.text, { color: TEXT_COLORS[difficulty] }]}>
+        {LABELS[difficulty]}
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-  text: { color: '#fff', fontSize: 12, fontWeight: '600' },
+  badge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  text: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
 });

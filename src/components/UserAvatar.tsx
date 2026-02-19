@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View, Image } from 'react-native';
+import { Colors } from '../theme';
 
 interface Props {
   avatarUrl: string | null;
@@ -31,7 +32,11 @@ export default function UserAvatar({ avatarUrl, displayName, size = 60 }: Props)
 }
 
 const styles = StyleSheet.create({
-  image: { backgroundColor: '#f0f0f0' },
-  fallback: { backgroundColor: '#4A90D9', justifyContent: 'center', alignItems: 'center' },
-  initials: { color: '#fff', fontWeight: '700' },
+  image: { backgroundColor: Colors.paper },
+  fallback: {
+    backgroundColor: Colors.amber,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  initials: { color: Colors.white, fontWeight: '700' },
 });
