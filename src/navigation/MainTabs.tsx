@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MainTabParamList } from '../types';
 import CatalogScreen from '../screens/CatalogScreen';
 import LeaderboardScreen from '../screens/LeaderboardScreen';
+import FriendsScreen from '../screens/FriendsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import { Colors, Fonts } from '../theme';
 
@@ -67,6 +68,14 @@ export default function MainTabs() {
         options={{
           tabBarLabel: 'Ranking',
           tabBarIcon: ({ focused }) => <TabIcon icon="🏆" focused={focused} />,
+        }}
+      />
+      <Tab.Screen
+        name="Friends"
+        component={FriendsScreen}
+        options={{
+          tabBarLabel: 'Amigos',
+          tabBarIcon: ({ focused }) => <TabIcon icon="👥" focused={focused} />,
         }}
       />
       <Tab.Screen

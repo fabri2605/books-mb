@@ -165,6 +165,8 @@ const styles = StyleSheet.create({
     padding: 20,
     borderTopWidth: 1,
     borderTopColor: Colors.dust,
+    backgroundColor: Colors.cream,
+    zIndex: 10,
   },
   navBtn: {
     paddingVertical: 12,

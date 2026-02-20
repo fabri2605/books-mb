@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, ScrollView } from 'react-native';
 import { Question } from '../types';
 import OptionButton from './OptionButton';
 import { Colors } from '../theme';
@@ -11,7 +11,12 @@ interface Props {
 
 export default function QuestionCard({ question, selectedOptionId, onSelectOption }: Props) {
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+    >
       <Text style={styles.questionText}>{question.text}</Text>
       {question.options.map((option) => (
         <OptionButton
@@ -21,14 +26,17 @@ export default function QuestionCard({ question, selectedOptionId, onSelectOptio
           onPress={() => onSelectOption(option.id)}
         />
       ))}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  content: {
     padding: 20,
+    paddingBottom: 8,
   },
   questionText: {
     fontSize: 17,

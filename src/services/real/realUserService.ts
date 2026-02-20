@@ -9,4 +9,9 @@ export class RealUserService implements IUserService {
     const { data } = await this.client.get('/users/me');
     return data;
   }
+
+  async updateUsername(username: string): Promise<User> {
+    const { data } = await this.client.patch('/users/me/username', { username });
+    return data;
+  }
 }

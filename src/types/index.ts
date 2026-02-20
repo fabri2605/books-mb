@@ -8,11 +8,23 @@ export interface User {
   id: string;
   email: string;
   displayName: string;
+  username: string;
   avatarUrl: string | null;
   totalPoints: number;
   booksCompleted: number;
   createdAt: string;
 }
+
+export interface PublicUser {
+  id: string;
+  displayName: string;
+  username: string;
+  avatarUrl: string | null;
+  totalPoints: number;
+  booksCompleted: number;
+}
+
+export type FriendshipStatus = 'none' | 'friends' | 'pending_sent' | 'pending_received';
 
 export interface Book {
   id: string;
@@ -63,6 +75,9 @@ export interface QuizResult {
     correctOptionId: string;
     isCorrect: boolean;
   }[];
+  leveledUp?: boolean;
+  newLevel?: number;
+  bonusPoints?: number;
 }
 
 export interface QuizStatus {
@@ -100,14 +115,17 @@ export interface PaginatedResponse<T> {
 
 export type RootStackParamList = {
   Auth: undefined;
+  UsernameSetup: undefined;
   Main: undefined;
   BookDetail: { bookId: string };
   Quiz: { bookId: string };
   QuizResult: { result: QuizResult };
+  UserProfile: { userId: string };
 };
 
 export type MainTabParamList = {
   Catalog: undefined;
   Leaderboard: undefined;
+  Friends: undefined;
   Profile: undefined;
 };

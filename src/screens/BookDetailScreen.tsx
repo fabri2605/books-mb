@@ -58,7 +58,7 @@ export default function BookDetailScreen() {
       {/* Cover */}
       <View style={[styles.cover, { backgroundColor: coverColor(book.id.charCodeAt(0) % 8) }]}>
         {book.coverUrl ? (
-          <Image source={{ uri: book.coverUrl }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
+          <Image source={{ uri: book.coverUrl }} style={StyleSheet.absoluteFillObject} resizeMode="cover" blurRadius={2} />
         ) : null}
         <View style={styles.coverOverlay}>
           <Text style={styles.coverTitle}>{book.title}</Text>

@@ -1,10 +1,20 @@
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
+import {
+  StyleSheet, Text, View, TouchableOpacity, ScrollView,
+  Modal, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform,
+} from 'react-native';
+import { useState, useCallback } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAuthStore } from '../hooks/useAuthStore';
 import { useLeaderboard } from '../hooks/useLeaderboard';
+import { userService } from '../services';
 import ProceduralCover from '../components/ProceduralCover';
 import { Colors, Fonts } from '../theme';
 import { Difficulty } from '../types';
+import { getLevelInfo, getLevelColor } from '../utils/scoring';
+
+const USERNAME_RE = /^[a-z0-9_]{3,30}$/;
 
 type AchievementDef = {
   id: string;
@@ -36,15 +46,56 @@ const RECENT_READS = [
 
 export default function ProfileScreen() {
   const user = useAuthStore((s) => s.user);
+  const setUser = useAuthStore((s) => s.setUser);
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const { entries } = useLeaderboard();
+
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [editValue, setEditValue] = useState('');
+  const [editError, setEditError] = useState('');
+  const [editLoading, setEditLoading] = useState(false);
+
+  const openUsernameEdit = useCallback(() => {
+    setEditValue(user?.username ?? '');
+    setEditError('');
+    setEditingUsername(true);
+  }, [user?.username]);
+
+  const handleEditChange = useCallback((text: string) => {
+    setEditValue(text.toLowerCase().replace(/[^a-z0-9_]/g, ''));
+    setEditError('');
+  }, []);
+
+  const handleEditSave = useCallback(async () => {
+    if (editValue.length < 3) { setEditError('Mínimo 3 caracteres.'); return; }
+    if (!USERNAME_RE.test(editValue)) { setEditError('Solo letras minúsculas, números y guion bajo.'); return; }
+    setEditLoading(true);
+    try {
+      const updated = await userService.updateUsername(editValue);
+      setUser(updated);
+      setEditingUsername(false);
+    } catch (e: any) {
+      const msg = e?.response?.data?.error ?? '';
+      setEditError(msg.includes('uso') ? 'Ese username ya está en uso.' : 'Ocurrió un error.');
+    } finally {
+      setEditLoading(false);
+    }
+  }, [editValue, setUser]);
 
   const initial = user?.displayName?.[0]?.toUpperCase() ?? 'U';
   const totalPoints = user?.totalPoints ?? 0;
   const booksCompleted = user?.booksCompleted ?? 0;
-  const level = Math.floor(totalPoints / 500) + 1;
-  const xpProgress = (totalPoints % 500) / 500;
-  const xpMax = level * 500;
+  const { level, xpProgress, xpInLevel, xpForNext } = getLevelInfo(totalPoints);
+  const xpMax = xpForNext;
+  const levelColor = getLevelColor(level);
+
+  const xpAnim = useSharedValue(0);
+  const animatedXpStyle = useAnimatedStyle(() => ({ width: (xpAnim.value + '%') as any }));
+
+  useFocusEffect(useCallback(() => {
+    xpAnim.value = 0;
+    xpAnim.value = withTiming(Math.max(2, xpProgress * 100), { duration: 900 });
+  }, [xpProgress]));
   const accuracy = booksCompleted ? Math.min(99, 70 + booksCompleted * 2) : 0;
 
   const myRank = entries.find((e) => e.userId === user?.id)?.rank ?? null;
@@ -73,13 +124,21 @@ export default function ProfileScreen() {
           >
             <Text style={styles.avatarText}>{initial}</Text>
           </LinearGradient>
-          <View style={styles.levelBadge}>
-            <Text style={styles.levelText}>Nv. {level}</Text>
+          <View style={[styles.levelBadge, { backgroundColor: levelColor.bg, borderColor: levelColor.accent }]}>
+            <Text style={[styles.levelText, { color: levelColor.accent }]}>Nv. {level}</Text>
           </View>
         </View>
 
         <Text style={styles.name}>{user?.displayName ?? 'Usuario'}</Text>
         <Text style={styles.handle}>{user?.email ?? ''}</Text>
+
+        {/* Username con edición */}
+        <TouchableOpacity style={styles.usernameRow} onPress={openUsernameEdit} activeOpacity={0.75}>
+          <Text style={styles.usernameText}>@{user?.username ?? '—'}</Text>
+          <View style={styles.editBadge}>
+            <Text style={styles.editBadgeText}>✏️ editar</Text>
+          </View>
+        </TouchableOpacity>
 
         {/* 4-stat row */}
         <View style={styles.statsRow}>
@@ -112,10 +171,10 @@ export default function ProfileScreen() {
         <View style={styles.card}>
           <View style={styles.xpHdr}>
             <Text style={styles.xpHdrText}>Progreso al Nivel {level + 1}</Text>
-            <Text style={styles.xpHdrPts}>{totalPoints} / {xpMax} XP</Text>
+            <Text style={styles.xpHdrPts}>{xpInLevel} / {xpMax} XP</Text>
           </View>
           <View style={styles.xpTrack}>
-            <View style={[styles.xpFill, { width: `${Math.max(2, xpProgress * 100)}%` as any }]} />
+            <Animated.View style={[styles.xpFill, { backgroundColor: levelColor.bg }, animatedXpStyle]} />
           </View>
         </View>
 
@@ -161,6 +220,71 @@ export default function ProfileScreen() {
           <Text style={styles.signOutText}>Cerrar sesión</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Modal edición de username */}
+      <Modal
+        visible={editingUsername}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setEditingUsername(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setEditingUsername(false)} />
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle}>Cambiar username</Text>
+
+            <View style={[
+              styles.modalInputWrap,
+              editError ? styles.inputError : USERNAME_RE.test(editValue) ? styles.inputOk : null,
+            ]}>
+              <Text style={styles.modalAt}>@</Text>
+              <TextInput
+                style={styles.modalInput}
+                value={editValue}
+                onChangeText={handleEditChange}
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoFocus
+                maxLength={30}
+                placeholder="nuevo_username"
+                placeholderTextColor="#c0b8a8"
+              />
+              {USERNAME_RE.test(editValue) && !editError && (
+                <Text style={styles.checkMark}>✓</Text>
+              )}
+            </View>
+
+            {editError
+              ? <Text style={styles.modalError}>{editError}</Text>
+              : <Text style={styles.modalHint}>3-30 caracteres · letras minúsculas, números y _</Text>
+            }
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => setEditingUsername(false)}
+                disabled={editLoading}
+              >
+                <Text style={styles.modalCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalSaveBtn, (!USERNAME_RE.test(editValue) || editLoading) && styles.btnDisabled]}
+                onPress={handleEditSave}
+                disabled={!USERNAME_RE.test(editValue) || editLoading}
+              >
+                {editLoading
+                  ? <ActivityIndicator size="small" color={Colors.white} />
+                  : <Text style={styles.modalSaveText}>Guardar</Text>
+                }
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
@@ -173,7 +297,7 @@ const styles = StyleSheet.create({
   hero: {
     paddingTop: 52,
     paddingHorizontal: 22,
-    paddingBottom: 0,
+    paddingBottom: 20,
     alignItems: 'center',
     gap: 8,
   },
@@ -223,7 +347,29 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: 'rgba(245,240,231,0.4)',
     letterSpacing: 0.5,
-    marginBottom: 6,
+  },
+  usernameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  usernameText: {
+    fontSize: 13,
+    color: Colors.amberLight,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  editBadge: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  editBadgeText: {
+    fontSize: 10,
+    color: 'rgba(245,240,231,0.55)',
+    fontWeight: '500',
   },
   statsRow: {
     flexDirection: 'row',
@@ -257,6 +403,9 @@ const styles = StyleSheet.create({
   },
   body: {
     flex: 1,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    overflow: 'hidden',
   },
   bodyContent: {
     padding: 16,
@@ -396,5 +545,116 @@ const styles = StyleSheet.create({
     color: '#7a6f5e',
     fontSize: 14,
     fontWeight: '600',
+  },
+  // --- Modal username ---
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  modalSheet: {
+    backgroundColor: '#f5f0e7',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    padding: 24,
+    paddingBottom: 40,
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 12,
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#d0c8bc',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 4,
+  },
+  modalTitle: {
+    fontFamily: Fonts.playfairBold,
+    fontSize: 18,
+    color: '#1a1410',
+  },
+  modalInputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.white,
+    borderWidth: 1.5,
+    borderColor: '#e2d9cb',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 6,
+  },
+  inputError: {
+    borderColor: '#c0594a',
+  },
+  inputOk: {
+    borderColor: '#3a7a5a',
+  },
+  modalAt: {
+    fontSize: 16,
+    color: '#9a8868',
+    fontWeight: '600',
+  },
+  modalInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#1a1410',
+    padding: 0,
+  },
+  checkMark: {
+    fontSize: 16,
+    color: '#3a7a5a',
+    fontWeight: '700',
+  },
+  modalHint: {
+    fontSize: 11,
+    color: '#9a8868',
+  },
+  modalError: {
+    fontSize: 12,
+    color: '#c0594a',
+    fontWeight: '600',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 4,
+  },
+  modalCancelBtn: {
+    flex: 1,
+    borderWidth: 1.5,
+    borderColor: Colors.dust,
+    borderRadius: 14,
+    paddingVertical: 13,
+    alignItems: 'center',
+    backgroundColor: Colors.white,
+  },
+  modalCancelText: {
+    color: '#7a6f5e',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  modalSaveBtn: {
+    flex: 1,
+    backgroundColor: Colors.amber,
+    borderRadius: 14,
+    paddingVertical: 13,
+    alignItems: 'center',
+  },
+  btnDisabled: {
+    opacity: 0.45,
+  },
+  modalSaveText: {
+    color: Colors.white,
+    fontWeight: '700',
+    fontSize: 14,
   },
 });

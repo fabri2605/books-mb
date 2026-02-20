@@ -29,7 +29,7 @@ export function useGoogleAuth() {
       setIsLoading(true);
       authService
         .signInWithGoogle(id_token)
-        .then((result) => setAuth(result.user, result.tokens))
+        .then((result) => setAuth(result.user, result.tokens, result.isNewUser))
         .finally(() => setIsLoading(false));
     }
   }, [response]);

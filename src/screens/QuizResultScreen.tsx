@@ -1,9 +1,10 @@
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
-import Animated, { FadeInDown, ZoomIn, SlideInUp } from 'react-native-reanimated';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Modal, Pressable } from 'react-native';
+import Animated, { FadeInDown, ZoomIn, SlideInUp, FadeIn, ZoomInEasyDown } from 'react-native-reanimated';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useState, useEffect } from 'react';
 import { RootStackParamList } from '../types';
-import { POINTS_PER_CORRECT } from '../utils/scoring';
+import { POINTS_PER_CORRECT, getLevelColor } from '../utils/scoring';
 import { Colors, Fonts } from '../theme';
 
 type RouteProps = NativeStackScreenProps<RootStackParamList, 'QuizResult'>['route'];
@@ -16,74 +17,137 @@ export default function QuizResultScreen() {
   const navigation = useNavigation<Nav>();
   const { result } = route.params;
 
+  const [showLevelUp, setShowLevelUp] = useState(false);
+
+  useEffect(() => {
+    if (result.leveledUp) {
+      const t = setTimeout(() => setShowLevelUp(true), 900);
+      return () => clearTimeout(t);
+    }
+  }, [result.leveledUp]);
+
   const percentage = Math.round((result.correctAnswers / result.totalQuestions) * 100);
   const pointsPerQ = POINTS_PER_CORRECT[result.difficulty];
-
   const emoji = percentage >= 80 ? '🎉' : percentage >= 50 ? '👍' : '📖';
 
+  const newLevelColor = result.newLevel ? getLevelColor(result.newLevel) : null;
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Score */}
-      <View style={styles.scoreSection}>
-        <Animated.Text entering={FadeInDown.delay(0).springify()} style={styles.resultEmoji}>
-          {emoji}
-        </Animated.Text>
-        <Animated.Text entering={FadeInDown.delay(60).springify()} style={styles.resultTitle}>
-          Resultado
-        </Animated.Text>
+    <View style={styles.root}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        {/* Score */}
+        <View style={styles.scoreSection}>
+          <Animated.Text entering={FadeInDown.delay(0).springify()} style={styles.resultEmoji}>
+            {emoji}
+          </Animated.Text>
+          <Animated.Text entering={FadeInDown.delay(60).springify()} style={styles.resultTitle}>
+            Resultado
+          </Animated.Text>
 
-        <Animated.View entering={ZoomIn.delay(140).springify().damping(12)} style={styles.scoreCircle}>
-          <Text style={styles.scoreNumber}>{result.correctAnswers}/{result.totalQuestions}</Text>
-          <Text style={styles.scorePercent}>{percentage}%</Text>
-        </Animated.View>
-
-        {/* XP toast */}
-        <Animated.View entering={SlideInUp.delay(320).springify().damping(10)} style={styles.xpToast}>
-          <Text style={styles.xpToastText}>+{result.pointsEarned} XP</Text>
-        </Animated.View>
-
-        <Animated.Text entering={FadeInDown.delay(420)} style={styles.difficultyInfo}>
-          {DIFFICULTY_LABELS[result.difficulty]} · {pointsPerQ} pt por correcta
-        </Animated.Text>
-      </View>
-
-      {/* Breakdown */}
-      <Animated.View entering={FadeInDown.delay(480).springify()} style={styles.breakdown}>
-        <Text style={styles.breakdownTitle}>Desglose</Text>
-        {result.answers.map((answer, index) => (
-          <Animated.View
-            key={answer.questionId}
-            entering={FadeInDown.delay(520 + index * 50).springify()}
-            style={styles.answerRow}
-          >
-            <View style={[styles.answerBadge, answer.isCorrect ? styles.answerCorrect : styles.answerIncorrect]}>
-              <Text style={styles.answerBadgeText}>{answer.isCorrect ? '✓' : '✗'}</Text>
-            </View>
-            <Text style={styles.answerLabel}>Pregunta {index + 1}</Text>
-            <Text style={[styles.answerResult, answer.isCorrect ? styles.correctText : styles.incorrectText]}>
-              {answer.isCorrect ? 'Correcta' : 'Incorrecta'}
-            </Text>
+          <Animated.View entering={ZoomIn.delay(140).springify().damping(12)} style={styles.scoreCircle}>
+            <Text style={styles.scoreNumber}>{result.correctAnswers}/{result.totalQuestions}</Text>
+            <Text style={styles.scorePercent}>{percentage}%</Text>
           </Animated.View>
-        ))}
-      </Animated.View>
 
-      <Animated.View entering={FadeInDown.delay(560).springify()}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.navigate('Main')}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.backButtonText}>Volver al catálogo</Text>
-        </TouchableOpacity>
-      </Animated.View>
-    </ScrollView>
+          {/* XP toast */}
+          <Animated.View entering={SlideInUp.delay(320).springify().damping(10)} style={styles.xpToast}>
+            <Text style={styles.xpToastText}>+{result.pointsEarned} XP</Text>
+          </Animated.View>
+
+          <Animated.Text entering={FadeInDown.delay(420)} style={styles.difficultyInfo}>
+            {DIFFICULTY_LABELS[result.difficulty]} · {pointsPerQ} pt por correcta
+          </Animated.Text>
+        </View>
+
+        {/* Breakdown */}
+        <Animated.View entering={FadeInDown.delay(480).springify()} style={styles.breakdown}>
+          <Text style={styles.breakdownTitle}>Desglose</Text>
+          {result.answers.map((answer, index) => (
+            <Animated.View
+              key={answer.questionId}
+              entering={FadeInDown.delay(520 + index * 50).springify()}
+              style={styles.answerRow}
+            >
+              <View style={[styles.answerBadge, answer.isCorrect ? styles.answerCorrect : styles.answerIncorrect]}>
+                <Text style={styles.answerBadgeText}>{answer.isCorrect ? '✓' : '✗'}</Text>
+              </View>
+              <Text style={styles.answerLabel}>Pregunta {index + 1}</Text>
+              <Text style={[styles.answerResult, answer.isCorrect ? styles.correctText : styles.incorrectText]}>
+                {answer.isCorrect ? 'Correcta' : 'Incorrecta'}
+              </Text>
+            </Animated.View>
+          ))}
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(560).springify()}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.navigate('Main')}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.backButtonText}>Volver al catálogo</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </ScrollView>
+
+      {/* Level-up overlay */}
+      <Modal
+        visible={showLevelUp}
+        transparent
+        animationType="none"
+        statusBarTranslucent
+        onRequestClose={() => setShowLevelUp(false)}
+      >
+        <Animated.View entering={FadeIn.duration(300)} style={styles.levelUpBackdrop}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowLevelUp(false)} />
+
+          <Animated.View
+            entering={ZoomInEasyDown.delay(80).springify().damping(13)}
+            style={[styles.levelUpCard, newLevelColor && { borderColor: newLevelColor.bg }]}
+          >
+            {/* Stars */}
+            <Text style={styles.levelUpStars}>✨⭐✨</Text>
+
+            <Text style={styles.levelUpTitle}>¡Subiste de nivel!</Text>
+
+            {/* Level badge */}
+            {newLevelColor && (
+              <View style={[styles.levelUpBadge, { backgroundColor: newLevelColor.bg }]}>
+                <Text style={[styles.levelUpBadgeText, { color: newLevelColor.accent }]}>
+                  Nivel {result.newLevel} · {newLevelColor.label}
+                </Text>
+              </View>
+            )}
+
+            {/* Bonus points */}
+            <View style={styles.bonusRow}>
+              <Text style={styles.bonusLabel}>Bonus por nivel</Text>
+              <Text style={[styles.bonusPoints, newLevelColor && { color: newLevelColor.bg }]}>
+                +{result.bonusPoints} pts
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.levelUpBtn, newLevelColor && { backgroundColor: newLevelColor.bg }]}
+              onPress={() => setShowLevelUp(false)}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.levelUpBtnText}>¡Genial!</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </Animated.View>
+      </Modal>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
     backgroundColor: Colors.cream,
+  },
+  container: {
+    flex: 1,
   },
   content: {
     padding: 24,
@@ -221,6 +285,88 @@ const styles = StyleSheet.create({
   backButtonText: {
     color: Colors.white,
     fontSize: 15,
+    fontWeight: '700',
+  },
+  // --- Level-up overlay ---
+  levelUpBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 28,
+  },
+  levelUpCard: {
+    backgroundColor: Colors.cream,
+    borderRadius: 28,
+    padding: 28,
+    width: '100%',
+    alignItems: 'center',
+    gap: 14,
+    borderWidth: 2,
+    borderColor: Colors.amber,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.2,
+    shadowRadius: 24,
+    elevation: 16,
+  },
+  levelUpStars: {
+    fontSize: 32,
+    letterSpacing: 4,
+  },
+  levelUpTitle: {
+    fontFamily: Fonts.playfairBold,
+    fontSize: 26,
+    color: Colors.ink,
+    textAlign: 'center',
+  },
+  levelUpBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+  },
+  levelUpBadgeText: {
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  bonusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: Colors.paper,
+    borderRadius: 14,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    width: '100%',
+    justifyContent: 'space-between',
+    marginTop: 2,
+  },
+  bonusLabel: {
+    fontSize: 14,
+    color: '#7a6f5e',
+    fontWeight: '500',
+  },
+  bonusPoints: {
+    fontFamily: Fonts.playfairBold,
+    fontSize: 22,
+    color: Colors.amber,
+  },
+  levelUpBtn: {
+    backgroundColor: Colors.amber,
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    marginTop: 4,
+    shadowColor: Colors.amber,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  levelUpBtnText: {
+    color: Colors.white,
+    fontSize: 16,
     fontWeight: '700',
   },
 });

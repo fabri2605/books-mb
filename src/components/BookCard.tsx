@@ -20,7 +20,7 @@ export default function BookCard({ book, onPress, index = 0, importing = false }
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85} disabled={importing}>
       <View style={[styles.cover, !hasCover && { backgroundColor: coverColor(index) }]}>
         {hasCover && (
-          <Image source={{ uri: book.coverUrl! }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
+          <Image source={{ uri: book.coverUrl! }} style={StyleSheet.absoluteFillObject} resizeMode="cover" blurRadius={2} />
         )}
         {!hasCover && (
           <ProceduralCover title={book.title} author={book.author} colorIndex={index} />

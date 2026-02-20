@@ -3,10 +3,10 @@ import {
   TouchableOpacity, ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-import { useNavigation } from '@react-navigation/native';
+import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { RootStackParamList, Book } from '../types';
 import { useBooks } from '../hooks/useBooks';
 import { useAuthStore } from '../hooks/useAuthStore';
@@ -19,6 +19,7 @@ import TrendingCardSkeleton from '../components/TrendingCardSkeleton';
 import StreakModal from '../components/StreakModal';
 import { useStreak } from '../hooks/useStreak';
 import { Colors, Fonts } from '../theme';
+import { getLevelInfo, getLevelColor } from '../utils/scoring';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -31,8 +32,16 @@ export default function CatalogScreen() {
 
   const initial = user?.displayName?.[0]?.toUpperCase() ?? 'U';
   const totalPoints = user?.totalPoints ?? 0;
-  const level = Math.floor(totalPoints / 500) + 1;
-  const xpProgress = (totalPoints % 500) / 500;
+  const { level, xpProgress } = getLevelInfo(totalPoints);
+  const levelColor = getLevelColor(level);
+
+  const xpAnim = useSharedValue(0);
+  const animatedXpStyle = useAnimatedStyle(() => ({ width: (xpAnim.value + '%') as any }));
+
+  useFocusEffect(useCallback(() => {
+    xpAnim.value = 0;
+    xpAnim.value = withTiming(Math.max(4, xpProgress * 100), { duration: 900 });
+  }, [xpProgress]));
 
   const trendingBooks = books
     .filter((b) => !b.isExternal && (b.readerCount ?? 0) > 0)
@@ -90,9 +99,9 @@ export default function CatalogScreen() {
             <Text style={styles.xpPtsText}>⭐ {totalPoints.toLocaleString()} pts</Text>
           </View>
           <View style={styles.xpTrack}>
-            <View style={[styles.xpFill, { width: `${Math.max(4, xpProgress * 100)}%` as any }]}>
-              <View style={styles.xpDot} />
-            </View>
+            <Animated.View style={[styles.xpFill, { backgroundColor: levelColor.bg }, animatedXpStyle]}>
+              <View style={[styles.xpDot, { backgroundColor: levelColor.accent }]} />
+            </Animated.View>
           </View>
         </View>
 
@@ -212,7 +221,7 @@ const styles = StyleSheet.create({
   header: {
     paddingTop: 52,
     paddingHorizontal: 22,
-    paddingBottom: 0,
+    paddingBottom: 20,
   },
   topBar: {
     flexDirection: 'row',
@@ -329,6 +338,9 @@ const styles = StyleSheet.create({
   },
   body: {
     flex: 1,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    overflow: 'hidden',
   },
   sectionHeader: {
     flexDirection: 'row',
