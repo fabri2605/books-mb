@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Question, QuizAnswer, QuizResult } from '../types';
-import { quizService } from '../services';
+import { quizService, userService } from '../services';
+import { useAuthStore } from './useAuthStore';
 
 export function useQuiz(bookId: string) {
+  const setUser = useAuthStore((s) => s.setUser);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Map<string, string>>(new Map());
@@ -47,6 +49,8 @@ export function useQuiz(bookId: string) {
     }));
     const res = await quizService.submitQuiz({ bookId, answers: quizAnswers });
     setResult(res);
+    // Refrescar el usuario en el store para reflejar los nuevos puntos
+    userService.getCurrentUser().then(setUser).catch(() => {});
     setSubmitting(false);
     return res;
   }

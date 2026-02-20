@@ -1,9 +1,10 @@
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
+import Animated, { FadeInDown, ZoomIn, SlideInUp } from 'react-native-reanimated';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { POINTS_PER_CORRECT } from '../utils/scoring';
-import { Colors } from '../theme';
+import { Colors, Fonts } from '../theme';
 
 type RouteProps = NativeStackScreenProps<RootStackParamList, 'QuizResult'>['route'];
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -24,25 +25,37 @@ export default function QuizResultScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Score */}
       <View style={styles.scoreSection}>
-        <Text style={styles.resultEmoji}>{emoji}</Text>
-        <Text style={styles.resultTitle}>Resultado</Text>
+        <Animated.Text entering={FadeInDown.delay(0).springify()} style={styles.resultEmoji}>
+          {emoji}
+        </Animated.Text>
+        <Animated.Text entering={FadeInDown.delay(60).springify()} style={styles.resultTitle}>
+          Resultado
+        </Animated.Text>
 
-        <View style={styles.scoreCircle}>
+        <Animated.View entering={ZoomIn.delay(140).springify().damping(12)} style={styles.scoreCircle}>
           <Text style={styles.scoreNumber}>{result.correctAnswers}/{result.totalQuestions}</Text>
           <Text style={styles.scorePercent}>{percentage}%</Text>
-        </View>
+        </Animated.View>
 
-        <Text style={styles.pointsEarned}>+{result.pointsEarned} puntos</Text>
-        <Text style={styles.difficultyInfo}>
+        {/* XP toast */}
+        <Animated.View entering={SlideInUp.delay(320).springify().damping(10)} style={styles.xpToast}>
+          <Text style={styles.xpToastText}>+{result.pointsEarned} XP</Text>
+        </Animated.View>
+
+        <Animated.Text entering={FadeInDown.delay(420)} style={styles.difficultyInfo}>
           {DIFFICULTY_LABELS[result.difficulty]} · {pointsPerQ} pt por correcta
-        </Text>
+        </Animated.Text>
       </View>
 
       {/* Breakdown */}
-      <View style={styles.breakdown}>
+      <Animated.View entering={FadeInDown.delay(480).springify()} style={styles.breakdown}>
         <Text style={styles.breakdownTitle}>Desglose</Text>
         {result.answers.map((answer, index) => (
-          <View key={answer.questionId} style={styles.answerRow}>
+          <Animated.View
+            key={answer.questionId}
+            entering={FadeInDown.delay(520 + index * 50).springify()}
+            style={styles.answerRow}
+          >
             <View style={[styles.answerBadge, answer.isCorrect ? styles.answerCorrect : styles.answerIncorrect]}>
               <Text style={styles.answerBadgeText}>{answer.isCorrect ? '✓' : '✗'}</Text>
             </View>
@@ -50,17 +63,19 @@ export default function QuizResultScreen() {
             <Text style={[styles.answerResult, answer.isCorrect ? styles.correctText : styles.incorrectText]}>
               {answer.isCorrect ? 'Correcta' : 'Incorrecta'}
             </Text>
-          </View>
+          </Animated.View>
         ))}
-      </View>
+      </Animated.View>
 
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.navigate('Main')}
-        activeOpacity={0.85}
-      >
-        <Text style={styles.backButtonText}>Volver al catálogo</Text>
-      </TouchableOpacity>
+      <Animated.View entering={FadeInDown.delay(560).springify()}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.navigate('Main')}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.backButtonText}>Volver al catálogo</Text>
+        </TouchableOpacity>
+      </Animated.View>
     </ScrollView>
   );
 }
@@ -111,10 +126,22 @@ const styles = StyleSheet.create({
     color: '#9a8f7e',
     fontWeight: '500',
   },
-  pointsEarned: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: Colors.amber,
+  xpToast: {
+    backgroundColor: Colors.amber,
+    borderRadius: 24,
+    paddingHorizontal: 28,
+    paddingVertical: 10,
+    shadowColor: Colors.amber,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.38,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  xpToastText: {
+    fontFamily: Fonts.playfairBold,
+    fontSize: 28,
+    color: Colors.white,
+    letterSpacing: 0.5,
   },
   difficultyInfo: {
     fontSize: 13,

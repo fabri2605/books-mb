@@ -1,15 +1,27 @@
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MainTabParamList } from '../types';
 import CatalogScreen from '../screens/CatalogScreen';
 import LeaderboardScreen from '../screens/LeaderboardScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-import { Colors } from '../theme';
+import { Colors, Fonts } from '../theme';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 function TabIcon({ icon, focused }: { icon: string; focused: boolean }) {
-  return <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.5 }}>{icon}</Text>;
+  return (
+    <View style={{ alignItems: 'center', gap: 3 }}>
+      <Text style={{ fontSize: 22, opacity: focused ? 1 : 0.4 }}>{icon}</Text>
+      <View
+        style={{
+          width: 4,
+          height: 4,
+          borderRadius: 2,
+          backgroundColor: focused ? Colors.amber : 'transparent',
+        }}
+      />
+    </View>
+  );
 }
 
 export default function MainTabs() {
@@ -18,21 +30,26 @@ export default function MainTabs() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: Colors.amber,
-        tabBarInactiveTintColor: '#b0a090',
+        tabBarInactiveTintColor: '#a0907e',
         tabBarStyle: {
-          backgroundColor: Colors.white,
+          backgroundColor: Colors.cream,
           borderTopColor: Colors.dust,
           borderTopWidth: 1,
           paddingTop: 6,
-          paddingBottom: 8,
-          height: 64,
+          paddingBottom: 10,
+          height: 70,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.06,
+          shadowRadius: 8,
+          elevation: 8,
         },
         tabBarLabelStyle: {
-          fontSize: 9,
-          fontWeight: '700',
-          letterSpacing: 0.5,
+          fontFamily: Fonts.playfairBold,
+          fontSize: 8,
+          letterSpacing: 0.8,
           textTransform: 'uppercase',
-          marginTop: 2,
+          marginTop: 0,
         },
       }}
     >

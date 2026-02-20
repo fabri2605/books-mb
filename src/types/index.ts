@@ -23,6 +23,9 @@ export interface Book {
   description: string;
   pageCount: number;
   questionCount: number;
+  isExternal?: boolean;
+  externalId?: string;
+  readerCount?: number;
 }
 
 export interface QuestionOption {
@@ -60,6 +63,12 @@ export interface QuizResult {
     correctOptionId: string;
     isCorrect: boolean;
   }[];
+}
+
+export interface QuizStatus {
+  canAttempt: boolean;
+  cooldownEndsAt: string | null;
+  bestPoints: number;
 }
 
 export interface LeaderboardEntry {

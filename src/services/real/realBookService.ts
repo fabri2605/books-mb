@@ -10,6 +10,7 @@ export class RealBookService implements IBookService {
     pageSize?: number;
     search?: string;
     difficulty?: Difficulty;
+    includeExternal?: boolean;
   }): Promise<PaginatedResponse<Book>> {
     const { data } = await this.client.get('/books', { params });
     return data;
@@ -17,6 +18,11 @@ export class RealBookService implements IBookService {
 
   async getBookById(bookId: string): Promise<Book> {
     const { data } = await this.client.get(`/books/${bookId}`);
+    return data;
+  }
+
+  async importBook(externalId: string): Promise<Book> {
+    const { data } = await this.client.post('/books/import', { externalId });
     return data;
   }
 }

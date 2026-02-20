@@ -6,6 +6,8 @@ export interface IBookService {
     pageSize?: number;
     search?: string;
     difficulty?: Difficulty;
+    includeExternal?: boolean;
   }): Promise<PaginatedResponse<Book>>;
   getBookById(bookId: string): Promise<Book>;
+  importBook(externalId: string): Promise<Book>;
 }

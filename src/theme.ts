@@ -24,6 +24,11 @@ export const Colors = {
   ],
 };
 
+export const Fonts = {
+  playfairBold: 'PlayfairDisplay_700Bold',
+  playfairBlack: 'PlayfairDisplay_900Black',
+};
+
 // Returns a cover color based on a stable index
 export function coverColor(index: number): string {
   return Colors.coverColors[index % Colors.coverColors.length];

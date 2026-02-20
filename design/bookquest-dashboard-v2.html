@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BookQuest — Dashboard v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink: #0d0c0a;
+  --cream: #f7f2ea;
+  --amber: #c97a1a;
+  --amber-light: #f0a030;
+  --amber-glow: rgba(240,160,48,0.15);
+  --forest: #142b1f;
+  --forest-mid: #1e3d2c;
+  --sage: #4a7a5f;
+  --dust: #b8a88a;
+  --paper: #ede7da;
+  --card: #faf6ef;
+  --gold: #c9a84c;
+  --shadow: rgba(10,8,5,0.4);
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: #0e0d0b;
+  background-image: radial-gradient(ellipse at 20% 0%, rgba(26,50,35,0.5) 0%, transparent 60%),
+                    radial-gradient(ellipse at 80% 100%, rgba(40,25,8,0.4) 0%, transparent 60%);
+  color: var(--cream);
+  min-height: 100vh;
+  padding: 48px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Header */
+.app-header {
+  text-align: center;
+  margin-bottom: 56px;
+}
+.app-header h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.6rem;
+  font-weight: 700;
+  color: var(--amber-light);
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+.app-header p {
+  margin-top: 6px;
+  font-size: 0.72rem;
+  color: var(--dust);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 400;
+}
+
+/* Grid */
+.screens {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 340px);
+  gap: 40px;
+  justify-content: center;
+  max-width: 1440px;
+  width: 100%;
+}
+.screen-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.screen-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #5a5040;
+  font-weight: 600;
+}
+
+/* Phone frame */
+.phone {
+  width: 340px;
+  height: 720px;
+  background: var(--cream);
+  border-radius: 48px;
+  overflow: hidden;
+  position: relative;
+  box-shadow:
+    0 0 0 1.5px rgba(255,255,255,0.06),
+    0 0 0 6px #1a1712,
+    0 0 0 7.5px rgba(255,255,255,0.04),
+    0 50px 100px rgba(0,0,0,0.7),
+    0 20px 40px rgba(0,0,0,0.4);
+  flex-shrink: 0;
+}
+.phone::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 110px; height: 28px;
+  background: #0e0d0b;
+  border-radius: 0 0 18px 18px;
+  z-index: 100;
+}
+
+/* ===================== DASHBOARD SCREEN ===================== */
+.dash-screen {
+  height: 100%;
+  background: #f5f0e7;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Hero header */
+.dash-hero {
+  background: linear-gradient(160deg, #142b1f 0%, #1e3d2c 60%, #243322 100%);
+  padding: 44px 22px 28px;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* Decorative circles in hero */
+.dash-hero::before {
+  content: '';
+  position: absolute;
+  width: 220px; height: 220px;
+  border-radius: 50%;
+  border: 1px solid rgba(240,160,48,0.08);
+  top: -60px; right: -50px;
+}
+.dash-hero::after {
+  content: '';
+  position: absolute;
+  width: 140px; height: 140px;
+  border-radius: 50%;
+  border: 1px solid rgba(240,160,48,0.06);
+  top: -20px; right: -10px;
+}
+
+.hero-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-greeting {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.hero-time {
+  font-size: 0.65rem;
+  color: var(--sage);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: 500;
+}
+.hero-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: #f5f0e7;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+}
+
+.hero-avatar {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--amber), var(--amber-light));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  box-shadow: 0 0 0 2px rgba(240,160,48,0.3), 0 4px 16px rgba(240,160,48,0.25);
+  cursor: pointer;
+}
+
+/* XP progress bar in hero */
+.hero-xp {
+  position: relative;
+  z-index: 1;
+}
+.hero-xp-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.hero-xp-label span {
+  font-size: 0.65rem;
+  color: rgba(245,240,231,0.5);
+  font-weight: 400;
+}
+.hero-xp-label strong {
+  font-size: 0.65rem;
+  color: var(--amber-light);
+  font-weight: 600;
+}
+.xp-track {
+  height: 4px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.xp-fill {
+  height: 100%;
+  width: 68%;
+  background: linear-gradient(90deg, var(--amber), var(--amber-light));
+  border-radius: 99px;
+  position: relative;
+}
+.xp-fill::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--amber-light);
+  box-shadow: 0 0 8px var(--amber-light);
+}
+
+/* Stats row */
+.hero-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  margin-top: 20px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+.hero-stat {
+  background: rgba(255,255,255,0.04);
+  padding: 12px 8px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: background 0.2s;
+}
+.hero-stat:hover { background: rgba(255,255,255,0.08); }
+.hero-stat-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--amber-light);
+}
+.hero-stat-label {
+  font-size: 0.58rem;
+  color: rgba(245,240,231,0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 500;
+}
+
+/* Body scroll */
+.dash-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 0 80px;
+  scrollbar-width: none;
+}
+.dash-body::-webkit-scrollbar { display: none; }
+
+/* Section headers */
+.section-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 18px 10px;
+}
+.section-hdr h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1a1410;
+  font-style: italic;
+  letter-spacing: 0.01em;
+}
+.section-hdr a {
+  font-size: 0.68rem;
+  color: var(--amber);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+}
+
+/* Trending horizontal scroll */
+.trending-row {
+  display: flex;
+  gap: 12px;
+  padding: 4px 18px 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.trending-row::-webkit-scrollbar { display: none; }
+
+.trend-card {
+  flex-shrink: 0;
+  width: 110px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  cursor: pointer;
+}
+
+.trend-cover {
+  width: 110px;
+  height: 155px;
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.15);
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s;
+}
+.trend-card:hover .trend-cover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 14px 30px rgba(0,0,0,0.28), 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.trend-cover-c1 { background: linear-gradient(160deg, #e8d5a3 0%, #c9a84c 50%, #8a6a20 100%); }
+.trend-cover-c2 { background: linear-gradient(160deg, #3d1a0a 0%, #7a3010 50%, #c05020 100%); }
+.trend-cover-c3 { background: linear-gradient(160deg, #0a2218 0%, #1a4a30 50%, #2a6a48 100%); }
+.trend-cover-c4 { background: linear-gradient(160deg, #1a1a3a 0%, #2a2a6a 50%, #3a3a9a 100%); }
+
+.trend-cover-inner {
+  position: absolute;
+  inset: 0;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 60%);
+}
+.trend-cover-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.95);
+  line-height: 1.2;
+}
+.trend-cover-auth {
+  font-size: 0.6rem;
+  color: rgba(255,255,255,0.6);
+  margin-top: 2px;
+}
+
+/* Badge on cover */
+.cover-badge {
+  position: absolute;
+  top: 8px; right: 8px;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(4px);
+  border-radius: 20px;
+  padding: 3px 7px;
+  font-size: 0.58rem;
+  color: rgba(255,255,255,0.9);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.trend-info-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #1a1410;
+  line-height: 1.3;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.trend-diff {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.diff-easy { background: #dcf0e3; color: #2e7d4f; }
+.diff-med  { background: #fef3d0; color: #92600a; }
+.diff-hard { background: #fde8e4; color: #b53c2a; }
+
+/* Search bar */
+.search-wrap {
+  padding: 4px 18px 0;
+}
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  border: 1.5px solid #e2d9cb;
+  border-radius: 14px;
+  padding: 11px 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.search-bar:focus-within {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 3px rgba(201,122,26,0.1);
+}
+.search-icon { font-size: 0.85rem; opacity: 0.4; }
+.search-placeholder { font-size: 0.8rem; color: #b0a090; font-weight: 400; }
+
+/* Filter chips */
+.chips-row {
+  display: flex;
+  gap: 8px;
+  padding: 10px 18px 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.chips-row::-webkit-scrollbar { display: none; }
+.chip {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.chip-active {
+  background: var(--amber);
+  color: white;
+  box-shadow: 0 3px 10px rgba(201,122,26,0.35);
+}
+.chip-inactive {
+  background: white;
+  border: 1.5px solid #e2d9cb;
+  color: #7a6a58;
+}
+.chip-inactive:hover { border-color: var(--amber); color: var(--amber); }
+
+/* Open Library button */
+.open-lib-btn {
+  margin: 10px 18px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 11px;
+  border-radius: 12px;
+  background: white;
+  border: 1.5px solid #e2d9cb;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #3a6ab0;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.open-lib-btn:hover { background: #f0f5ff; border-color: #3a6ab0; }
+
+/* Book grid section */
+.books-grid-section { padding: 0 18px; }
+.books-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 4px;
+}
+.grid-book {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+}
+.grid-cover {
+  aspect-ratio: 2/3;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+}
+.grid-book:hover .grid-cover { transform: translateY(-3px); }
+.gc1 { background: linear-gradient(160deg,#d4a843,#7a5a10); }
+.gc2 { background: linear-gradient(160deg,#2c5364,#083a4a); }
+.gc3 { background: linear-gradient(160deg,#4a1942,#7a2a6a); }
+.gc4 { background: linear-gradient(160deg,#1a3a2a,#2d6a4f); }
+.gc5 { background: linear-gradient(160deg,#3d1a0a,#8a3a10); }
+.gc6 { background: linear-gradient(160deg,#1a1a4a,#2a3a8a); }
+
+.grid-cover-label {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 18px 6px 6px;
+  background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 100%);
+}
+.grid-cover-label span {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.92);
+  display: block;
+  line-height: 1.2;
+}
+.grid-book-title {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #2a2018;
+  line-height: 1.3;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Bottom nav */
+.bottom-nav {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 72px;
+  background: rgba(250,246,239,0.92);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(0,0,0,0.06);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 0 8px;
+  z-index: 50;
+}
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  padding-bottom: 8px;
+}
+.nav-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nav-text {
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #a89878;
+}
+.nav-item.active .nav-text { color: var(--amber); }
+.nav-item.active .nav-dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--amber);
+  margin-top: -1px;
+}
+
+
+/* ===================== RANKING SCREEN ===================== */
+.rank-screen {
+  height: 100%;
+  background: #f5f0e7;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.rank-hero {
+  background: linear-gradient(160deg, #1a1508 0%, #2a2010 60%, #3a2d15 100%);
+  padding: 44px 22px 0;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.rank-hero-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--amber-light);
+  text-align: center;
+  margin-bottom: 4px;
+}
+.rank-hero-subtitle {
+  font-size: 0.65rem;
+  color: rgba(245,240,231,0.4);
+  text-align: center;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0;
+}
+.podium-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.podium-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: white;
+  position: relative;
+}
+.pod1 { width: 44px; height: 44px; font-size: 1.1rem; }
+.pod1 .crown { position: absolute; top: -14px; font-size: 1rem; }
+.podium-col:nth-child(1) .podium-avatar { background: linear-gradient(135deg,#a0a0c0,#c0c0d8); }
+.podium-col:nth-child(2) .podium-avatar { background: linear-gradient(135deg,var(--amber),var(--amber-light)); box-shadow: 0 0 20px rgba(240,160,48,0.4); }
+.podium-col:nth-child(3) .podium-avatar { background: linear-gradient(135deg,#c08050,#d4a070); }
+
+.podium-name { font-size: 0.62rem; color: rgba(245,240,231,0.7); font-weight: 500; }
+.podium-pts { font-size: 0.65rem; color: var(--amber-light); font-weight: 700; font-family: 'Cormorant Garamond', serif; }
+
+.podium-block {
+  width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.5);
+}
+.podium-block.pb1 { height: 54px; background: linear-gradient(180deg, rgba(201,168,76,0.3) 0%, rgba(201,168,76,0.1) 100%); border-radius: 10px 10px 0 0; }
+.podium-block.pb2 { height: 36px; background: rgba(255,255,255,0.05); border-radius: 8px 8px 0 0; }
+.podium-block.pb3 { height: 26px; background: rgba(255,255,255,0.04); border-radius: 6px 6px 0 0; }
+
+/* Rank tabs */
+.rank-tabs {
+  display: flex;
+  gap: 0;
+  background: white;
+  border-bottom: 1px solid #e8e0d0;
+  flex-shrink: 0;
+}
+.rank-tab {
+  flex: 1;
+  text-align: center;
+  padding: 12px 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #a09080;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s;
+}
+.rank-tab.active { color: var(--amber); }
+.rank-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 20%; right: 20%;
+  height: 2px;
+  background: var(--amber);
+  border-radius: 2px 2px 0 0;
+}
+
+/* Rank list */
+.rank-body {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: 8px 0 80px;
+  background: #f5f0e7;
+}
+.rank-body::-webkit-scrollbar { display: none; }
+
+.rank-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  border-radius: 0;
+  transition: background 0.15s;
+  cursor: pointer;
+}
+.rank-item:hover { background: rgba(0,0,0,0.03); }
+.rank-item.rank-me {
+  background: rgba(201,122,26,0.07);
+  border-left: 3px solid var(--amber);
+}
+.rank-num {
+  width: 22px;
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #b0a080;
+  font-family: 'Cormorant Garamond', serif;
+}
+.rank-num.top3 { color: var(--amber); font-size: 0.85rem; }
+.rank-av {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+.rank-info { flex: 1; min-width: 0; }
+.rank-info-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #1a1410;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.friend-tag {
+  font-size: 0.55rem;
+  padding: 1px 5px;
+  background: rgba(74,122,95,0.15);
+  color: var(--sage);
+  border-radius: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.rank-info-books { font-size: 0.65rem; color: #a09080; margin-top: 1px; }
+.rank-pts-col {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--amber);
+}
+.rank-item.rank-me .rank-pts-col { color: var(--amber); }
+
+
+/* ===================== PROFILE SCREEN ===================== */
+.prof-screen {
+  height: 100%;
+  background: #f5f0e7;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.prof-hero {
+  background: linear-gradient(160deg, #142b1f 0%, #1e3d2c 70%, #243322 100%);
+  padding: 44px 22px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.prof-avatar-wrap {
+  position: relative;
+}
+.prof-avatar {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--amber), var(--amber-light));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  box-shadow: 0 0 0 3px rgba(240,160,48,0.25), 0 8px 24px rgba(240,160,48,0.2);
+}
+.prof-level-badge {
+  position: absolute;
+  bottom: -4px; right: -6px;
+  background: #1a3a2a;
+  border: 1.5px solid var(--amber);
+  border-radius: 20px;
+  padding: 2px 7px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--amber-light);
+  white-space: nowrap;
+}
+
+.prof-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #f5f0e7;
+  line-height: 1;
+}
+.prof-handle {
+  font-size: 0.65rem;
+  color: rgba(245,240,231,0.4);
+  letter-spacing: 0.06em;
+}
+
+.prof-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  width: 100%;
+  margin-top: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.prof-stat {
+  padding: 10px 4px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.prof-stat + .prof-stat { border-left: 1px solid rgba(255,255,255,0.05); }
+.prof-stat-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--amber-light);
+}
+.prof-stat-label {
+  font-size: 0.55rem;
+  color: rgba(245,240,231,0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Profile body */
+.prof-body {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: 16px 18px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.prof-body::-webkit-scrollbar { display: none; }
+
+/* XP section */
+.xp-section {
+  background: white;
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.xp-hdr {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.xp-hdr span { font-size: 0.7rem; font-weight: 600; color: #2a2018; }
+.xp-hdr em { font-size: 0.7rem; color: var(--amber); font-style: normal; font-weight: 700; }
+.xp-track2 { height: 6px; background: #f0ead8; border-radius: 99px; overflow: hidden; }
+.xp-fill2 { height: 100%; width: 68%; background: linear-gradient(90deg,var(--amber),var(--amber-light)); border-radius: 99px; }
+
+/* Section card */
+.prof-section-card {
+  background: white;
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.prof-section-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  font-style: italic;
+  color: #1a1410;
+  margin-bottom: 10px;
+}
+
+/* Achievements */
+.achieve-grid {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 8px;
+}
+.achieve-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border-radius: 10px;
+  transition: background 0.2s;
+}
+.achieve-item.unlocked { background: rgba(201,122,26,0.08); }
+.achieve-item.locked { opacity: 0.35; background: rgba(0,0,0,0.04); }
+.achieve-icon { font-size: 1.3rem; line-height: 1; }
+.achieve-label { font-size: 0.55rem; color: #5a4a38; font-weight: 600; text-align: center; }
+
+/* Recent reads */
+.read-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+}
+.read-item + .read-item { border-top: 1px solid #f0e8d8; }
+.read-mini-cover {
+  width: 32px; height: 44px;
+  border-radius: 5px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.read-info { flex: 1; min-width: 0; }
+.read-title { font-size: 0.75rem; font-weight: 600; color: #1a1410; }
+.read-stars { font-size: 0.65rem; color: var(--amber); margin-top: 2px; }
+.read-quiz { font-size: 0.6rem; color: #9a8868; }
+.read-pts {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--sage);
+}
+
+/* Shared bottom nav */
+.bnav {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 72px;
+  background: rgba(250,246,239,0.94);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(0,0,0,0.06);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 0 8px;
+  z-index: 50;
+}
+.bnav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  padding-bottom: 8px;
+}
+.bnav-icon { font-size: 1.1rem; line-height: 1; }
+.bnav-text {
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #b0a080;
+}
+.bnav-item.active .bnav-text { color: var(--amber); }
+.bnav-item.active .bnav-icon { filter: brightness(0) saturate(100%) invert(56%) sepia(72%) saturate(600%) hue-rotate(10deg) brightness(95%); }
+
+/* Animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.phone { animation: fadeUp 0.5s ease both; }
+.screens > :nth-child(1) .phone { animation-delay: 0s; }
+.screens > :nth-child(2) .phone { animation-delay: 0.1s; }
+.screens > :nth-child(3) .phone { animation-delay: 0.2s; }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <h1>BookQuest</h1>
+  <p>Design System · Screens v2</p>
+</div>
+
+<div class="screens">
+
+  <!-- ===== DASHBOARD ===== -->
+  <div class="screen-wrap">
+    <div class="screen-label">01 — Dashboard</div>
+    <div class="phone">
+      <div class="dash-screen">
+
+        <div class="dash-hero">
+          <div class="hero-top">
+            <div class="hero-greeting">
+              <span class="hero-time">Buenas noches</span>
+              <div class="hero-name">Fabricio</div>
+            </div>
+            <div class="hero-avatar">F</div>
+          </div>
+          <div class="hero-xp">
+            <div class="hero-xp-label">
+              <span>Nivel 7 → 8</span>
+              <strong>⭐ 85 pts hoy</strong>
+            </div>
+            <div class="xp-track"><div class="xp-fill"></div></div>
+          </div>
+          <div class="hero-stats">
+            <div class="hero-stat">
+              <div class="hero-stat-val">18</div>
+              <div class="hero-stat-label">Libros</div>
+            </div>
+            <div class="hero-stat">
+              <div class="hero-stat-val">3.2k</div>
+              <div class="hero-stat-label">Puntos</div>
+            </div>
+            <div class="hero-stat">
+              <div class="hero-stat-val">#12</div>
+              <div class="hero-stat-label">Ranking</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-body">
+
+          <!-- Search -->
+          <div class="search-wrap">
+            <div class="search-bar" style="margin-top:16px;">
+              <span class="search-icon">🔍</span>
+              <span class="search-placeholder">Buscar un libro...</span>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div class="chips-row">
+            <div class="chip chip-active">Todos</div>
+            <div class="chip chip-inactive">Fácil</div>
+            <div class="chip chip-inactive">Medio</div>
+            <div class="chip chip-inactive">Difícil</div>
+          </div>
+
+          <div class="open-lib-btn">
+            🌐 &nbsp;Buscar en Open Library
+          </div>
+
+          <!-- Trending -->
+          <div class="section-hdr">
+            <h2>Tendencia 🔥</h2>
+            <a href="#">Ver más</a>
+          </div>
+
+          <div class="trending-row">
+            <div class="trend-card">
+              <div class="trend-cover trend-cover-c1">
+                <div class="cover-badge">👤 1</div>
+                <div class="trend-cover-inner">
+                  <div class="trend-cover-title">Dejar Ir</div>
+                  <div class="trend-cover-auth">Dr. Hawkins</div>
+                </div>
+              </div>
+              <div class="trend-info-title">Dejar Ir</div>
+              <span class="trend-diff diff-med">Medio · 90 pts</span>
+            </div>
+            <div class="trend-card">
+              <div class="trend-cover trend-cover-c2">
+                <div class="cover-badge">👤 1</div>
+                <div class="trend-cover-inner">
+                  <div class="trend-cover-title">El Monje que Vendió su Ferrari</div>
+                  <div class="trend-cover-auth">Robin Sharma</div>
+                </div>
+              </div>
+              <div class="trend-info-title">El Monje que Vendió su Ferrari</div>
+              <span class="trend-diff diff-easy">Fácil · 60 pts</span>
+            </div>
+            <div class="trend-card">
+              <div class="trend-cover trend-cover-c3">
+                <div class="trend-cover-inner">
+                  <div class="trend-cover-title">El Principito</div>
+                  <div class="trend-cover-auth">Saint-Exupéry</div>
+                </div>
+              </div>
+              <div class="trend-info-title">El Principito</div>
+              <span class="trend-diff diff-easy">Fácil · 50 pts</span>
+            </div>
+            <div class="trend-card">
+              <div class="trend-cover trend-cover-c4">
+                <div class="trend-cover-inner">
+                  <div class="trend-cover-title">1984</div>
+                  <div class="trend-cover-auth">George Orwell</div>
+                </div>
+              </div>
+              <div class="trend-info-title">1984</div>
+              <span class="trend-diff diff-hard">Difícil · 140 pts</span>
+            </div>
+          </div>
+
+          <!-- All books -->
+          <div class="section-hdr" style="padding-top:16px;">
+            <h2>Todos los libros</h2>
+          </div>
+
+          <div class="books-grid-section">
+            <div class="books-grid">
+              <div class="grid-book">
+                <div class="grid-cover gc1">
+                  <div class="grid-cover-label"><span>El Alquimista</span></div>
+                </div>
+                <div class="grid-book-title">El Alquimista</div>
+                <span class="trend-diff diff-easy" style="font-size:0.55rem;padding:2px 6px;">60 pts</span>
+              </div>
+              <div class="grid-book">
+                <div class="grid-cover gc2">
+                  <div class="grid-cover-label"><span>1984</span></div>
+                </div>
+                <div class="grid-book-title">1984</div>
+                <span class="trend-diff diff-hard" style="font-size:0.55rem;padding:2px 6px;">140 pts</span>
+              </div>
+              <div class="grid-book">
+                <div class="grid-cover gc3">
+                  <div class="grid-cover-label"><span>Nombre del Viento</span></div>
+                </div>
+                <div class="grid-book-title">El Nombre del Viento</div>
+                <span class="trend-diff diff-med" style="font-size:0.55rem;padding:2px 6px;">90 pts</span>
+              </div>
+              <div class="grid-book">
+                <div class="grid-cover gc4">
+                  <div class="grid-cover-label"><span>Principito</span></div>
+                </div>
+                <div class="grid-book-title">El Principito</div>
+                <span class="trend-diff diff-easy" style="font-size:0.55rem;padding:2px 6px;">50 pts</span>
+              </div>
+              <div class="grid-book">
+                <div class="grid-cover gc5">
+                  <div class="grid-cover-label"><span>Dune</span></div>
+                </div>
+                <div class="grid-book-title">Dune</div>
+                <span class="trend-diff diff-hard" style="font-size:0.55rem;padding:2px 6px;">140 pts</span>
+              </div>
+              <div class="grid-book">
+                <div class="grid-cover gc6">
+                  <div class="grid-cover-label"><span>Don Quijote</span></div>
+                </div>
+                <div class="grid-book-title">Don Quijote</div>
+                <span class="trend-diff diff-hard" style="font-size:0.55rem;padding:2px 6px;">160 pts</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-nav">
+          <div class="nav-item active">
+            <div class="nav-icon">📚</div>
+            <div class="nav-text">Libros</div>
+          </div>
+          <div class="nav-item">
+            <div class="nav-icon">🏆</div>
+            <div class="nav-text">Ranking</div>
+          </div>
+          <div class="nav-item">
+            <div class="nav-icon">👤</div>
+            <div class="nav-text">Perfil</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== RANKING ===== -->
+  <div class="screen-wrap">
+    <div class="screen-label">02 — Ranking</div>
+    <div class="phone">
+      <div class="rank-screen">
+
+        <div class="rank-hero">
+          <div class="rank-hero-title">Tabla de Posiciones</div>
+          <div class="rank-hero-subtitle">Semana actual · Top 100</div>
+
+          <div class="podium">
+            <!-- 2nd -->
+            <div class="podium-col">
+              <div class="podium-avatar" style="background:linear-gradient(135deg,#a0a0c0,#c0c0d8);">L</div>
+              <div class="podium-name">Lucas</div>
+              <div class="podium-pts">4.100</div>
+              <div class="podium-block pb2">2</div>
+            </div>
+            <!-- 1st -->
+            <div class="podium-col">
+              <div class="podium-avatar pod1" style="background:linear-gradient(135deg,var(--amber),var(--amber-light));">
+                <span class="crown">👑</span>A
+              </div>
+              <div class="podium-name">Agustina</div>
+              <div class="podium-pts">5.820</div>
+              <div class="podium-block pb1">1</div>
+            </div>
+            <!-- 3rd -->
+            <div class="podium-col">
+              <div class="podium-avatar" style="background:linear-gradient(135deg,#c08050,#d4a070);">R</div>
+              <div class="podium-name">Ramiro</div>
+              <div class="podium-pts">3.750</div>
+              <div class="podium-block pb3">3</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rank-tabs">
+          <div class="rank-tab active">Global</div>
+          <div class="rank-tab">Amigos</div>
+          <div class="rank-tab">Mensual</div>
+        </div>
+
+        <div class="rank-body">
+          <div class="rank-item">
+            <div class="rank-num top3">4</div>
+            <div class="rank-av" style="background:linear-gradient(135deg,#6a0dad,#9b30d9);">V</div>
+            <div class="rank-info">
+              <div class="rank-info-name">Valentina</div>
+              <div class="rank-info-books">28 libros leídos</div>
+            </div>
+            <div class="rank-pts-col">3.420</div>
+          </div>
+          <div class="rank-item">
+            <div class="rank-num">5</div>
+            <div class="rank-av" style="background:linear-gradient(135deg,#0f4c81,#1a6ebd);">F</div>
+            <div class="rank-info">
+              <div class="rank-info-name">Federico <span class="friend-tag">Amigo</span></div>
+              <div class="rank-info-books">24 libros leídos</div>
+            </div>
+            <div class="rank-pts-col">3.310</div>
+          </div>
+          <div class="rank-item">
+            <div class="rank-num">6</div>
+            <div class="rank-av" style="background:linear-gradient(135deg,#2e7d32,#43a047);">S</div>
+            <div class="rank-info">
+              <div class="rank-info-name">Sofía <span class="friend-tag">Amiga</span></div>
+              <div class="rank-info-books">22 libros leídos</div>
+            </div>
+            <div class="rank-pts-col">3.250</div>
+          </div>
+          <div class="rank-item">
+            <div class="rank-num">7</div>
+            <div class="rank-av" style="background:linear-gradient(135deg,#b71c1c,#e53935);">T</div>
+            <div class="rank-info">
+              <div class="rank-info-name">Tomás</div>
+              <div class="rank-info-books">20 libros leídos</div>
+            </div>
+            <div class="rank-pts-col">3.180</div>
+          </div>
+
+          <!-- Separator -->
+          <div style="padding:8px 18px;display:flex;align-items:center;gap:8px;">
+            <div style="flex:1;height:1px;background:#e8dece;"></div>
+            <div style="font-size:0.6rem;color:#b0a080;font-weight:600;letter-spacing:0.1em;">TU POSICIÓN</div>
+            <div style="flex:1;height:1px;background:#e8dece;"></div>
+          </div>
+
+          <div class="rank-item rank-me">
+            <div class="rank-num top3">12</div>
+            <div class="rank-av" style="background:linear-gradient(135deg,var(--amber),var(--amber-light));">F</div>
+            <div class="rank-info">
+              <div class="rank-info-name">Fabricio <span style="color:var(--amber);font-size:0.65rem;">★ Vos</span></div>
+              <div class="rank-info-books">18 libros leídos</div>
+            </div>
+            <div class="rank-pts-col">3.240</div>
+          </div>
+          <div class="rank-item">
+            <div class="rank-num">13</div>
+            <div class="rank-av" style="background:linear-gradient(135deg,#1a6a5a,#2a9a7a);">M</div>
+            <div class="rank-info">
+              <div class="rank-info-name">Martina</div>
+              <div class="rank-info-books">17 libros leídos</div>
+            </div>
+            <div class="rank-pts-col">3.050</div>
+          </div>
+        </div>
+
+        <div class="bnav">
+          <div class="bnav-item">
+            <div class="bnav-icon">📚</div>
+            <div class="bnav-text">Libros</div>
+          </div>
+          <div class="bnav-item active">
+            <div class="bnav-icon">🏆</div>
+            <div class="bnav-text">Ranking</div>
+          </div>
+          <div class="bnav-item">
+            <div class="bnav-icon">👤</div>
+            <div class="bnav-text">Perfil</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PROFILE ===== -->
+  <div class="screen-wrap">
+    <div class="screen-label">03 — Perfil</div>
+    <div class="phone">
+      <div class="prof-screen">
+
+        <div class="prof-hero">
+          <div class="prof-avatar-wrap">
+            <div class="prof-avatar">F</div>
+            <div class="prof-level-badge">Nv. 7</div>
+          </div>
+          <div class="prof-name">Fabricio</div>
+          <div class="prof-handle">@fabricio.lee · Mendoza, AR</div>
+          <div class="prof-stats-row">
+            <div class="prof-stat">
+              <div class="prof-stat-val">18</div>
+              <div class="prof-stat-label">Libros</div>
+            </div>
+            <div class="prof-stat">
+              <div class="prof-stat-val">3.2k</div>
+              <div class="prof-stat-label">Pts</div>
+            </div>
+            <div class="prof-stat">
+              <div class="prof-stat-val">#12</div>
+              <div class="prof-stat-label">Rango</div>
+            </div>
+            <div class="prof-stat">
+              <div class="prof-stat-val">87%</div>
+              <div class="prof-stat-label">Precisión</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="prof-body">
+
+          <div class="xp-section">
+            <div class="xp-hdr">
+              <span>Progreso al Nivel 8</span>
+              <em>3.240 / 4.800 XP</em>
+            </div>
+            <div class="xp-track2"><div class="xp-fill2"></div></div>
+          </div>
+
+          <div class="prof-section-card">
+            <div class="prof-section-title">Logros 🎖️</div>
+            <div class="achieve-grid">
+              <div class="achieve-item unlocked">
+                <div class="achieve-icon">📚</div>
+                <div class="achieve-label">10 libros</div>
+              </div>
+              <div class="achieve-item unlocked">
+                <div class="achieve-icon">🔥</div>
+                <div class="achieve-label">Racha 7d</div>
+              </div>
+              <div class="achieve-item unlocked">
+                <div class="achieve-icon">🎯</div>
+                <div class="achieve-label">Quiz 100%</div>
+              </div>
+              <div class="achieve-item unlocked">
+                <div class="achieve-icon">⚡</div>
+                <div class="achieve-label">Velocista</div>
+              </div>
+              <div class="achieve-item locked">
+                <div class="achieve-icon">🌍</div>
+                <div class="achieve-label">50 libros</div>
+              </div>
+              <div class="achieve-item locked">
+                <div class="achieve-icon">👑</div>
+                <div class="achieve-label">Top 10</div>
+              </div>
+              <div class="achieve-item locked">
+                <div class="achieve-icon">🦉</div>
+                <div class="achieve-label">Clásicos</div>
+              </div>
+              <div class="achieve-item locked">
+                <div class="achieve-icon">💎</div>
+                <div class="achieve-label">Nivel 10</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="prof-section-card">
+            <div class="prof-section-title">Leídos recientemente</div>
+            <div class="read-item">
+              <div class="read-mini-cover" style="background:linear-gradient(160deg,#2c5364,#083a4a);"></div>
+              <div class="read-info">
+                <div class="read-title">1984 — Orwell</div>
+                <div class="read-stars">★★★★★</div>
+                <div class="read-quiz">9/10 correctas</div>
+              </div>
+              <div class="read-pts">+120</div>
+            </div>
+            <div class="read-item">
+              <div class="read-mini-cover" style="background:linear-gradient(160deg,#1a3a2a,#2d6a4f);"></div>
+              <div class="read-info">
+                <div class="read-title">El Alquimista — Coelho</div>
+                <div class="read-stars">★★★★☆</div>
+                <div class="read-quiz">7/10 correctas</div>
+              </div>
+              <div class="read-pts">+42</div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="bnav">
+          <div class="bnav-item">
+            <div class="bnav-icon">📚</div>
+            <div class="bnav-text">Libros</div>
+          </div>
+          <div class="bnav-item">
+            <div class="bnav-icon">🏆</div>
+            <div class="bnav-text">Ranking</div>
+          </div>
+          <div class="bnav-item active">
+            <div class="bnav-icon">👤</div>
+            <div class="bnav-text">Perfil</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

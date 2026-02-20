@@ -1,6 +1,6 @@
 import { AxiosInstance } from 'axios';
 import { IQuizService } from '../interfaces/quizService';
-import { Question, QuizSubmission, QuizResult } from '../../types';
+import { Question, QuizSubmission, QuizResult, QuizStatus } from '../../types';
 
 export class RealQuizService implements IQuizService {
   constructor(private client: AxiosInstance) {}
@@ -12,6 +12,11 @@ export class RealQuizService implements IQuizService {
 
   async submitQuiz(submission: QuizSubmission): Promise<QuizResult> {
     const { data } = await this.client.post('/quiz/submit', submission);
+    return data;
+  }
+
+  async getQuizStatus(bookId: string): Promise<QuizStatus> {
+    const { data } = await this.client.get(`/quiz/status/${bookId}`);
     return data;
   }
 }
