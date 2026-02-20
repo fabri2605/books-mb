@@ -5,6 +5,8 @@ import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-naviga
 import { useState, useEffect } from 'react';
 import { RootStackParamList } from '../types';
 import { POINTS_PER_CORRECT, getLevelColor } from '../utils/scoring';
+import { userService } from '../services';
+import { AchievementNextHint } from '../types';
 import { Colors, Fonts } from '../theme';
 
 type RouteProps = NativeStackScreenProps<RootStackParamList, 'QuizResult'>['route'];
@@ -18,6 +20,7 @@ export default function QuizResultScreen() {
   const { result } = route.params;
 
   const [showLevelUp, setShowLevelUp] = useState(false);
+  const [nextHint, setNextHint] = useState<AchievementNextHint | null>(null);
 
   useEffect(() => {
     if (result.leveledUp) {
@@ -25,6 +28,10 @@ export default function QuizResultScreen() {
       return () => clearTimeout(t);
     }
   }, [result.leveledUp]);
+
+  useEffect(() => {
+    userService.getAchievements().then((r) => setNextHint(r.nextHint ?? null)).catch(() => {});
+  }, []);
 
   const percentage = Math.round((result.correctAnswers / result.totalQuestions) * 100);
   const pointsPerQ = POINTS_PER_CORRECT[result.difficulty];
@@ -54,6 +61,30 @@ export default function QuizResultScreen() {
             <Text style={styles.xpToastText}>+{result.pointsEarned} XP</Text>
           </Animated.View>
 
+          {/* Multiplier badges */}
+          <Animated.View entering={FadeInDown.delay(380)} style={styles.badgeRow}>
+            {result.isPerfect && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>🎯 PERFECTO</Text>
+              </View>
+            )}
+            {result.isFirstQuiz && (
+              <View style={[styles.badge, styles.badgeGold]}>
+                <Text style={styles.badgeText}>🚀 PRIMERA VEZ 3×</Text>
+              </View>
+            )}
+            {result.isDailyBook && (
+              <View style={[styles.badge, styles.badgeAmber]}>
+                <Text style={styles.badgeText}>⭐ LIBRO DEL DÍA 2×</Text>
+              </View>
+            )}
+            {result.streakMultiplier && result.streakMultiplier > 1 && (
+              <View style={[styles.badge, styles.badgeSage]}>
+                <Text style={styles.badgeText}>🔥 RACHA {result.streakCount}d ×{result.streakMultiplier}</Text>
+              </View>
+            )}
+          </Animated.View>
+
           <Animated.Text entering={FadeInDown.delay(420)} style={styles.difficultyInfo}>
             {DIFFICULTY_LABELS[result.difficulty]} · {pointsPerQ} pt por correcta
           </Animated.Text>
@@ -78,6 +109,16 @@ export default function QuizResultScreen() {
             </Animated.View>
           ))}
         </Animated.View>
+
+        {/* Proximity to next achievement */}
+        {nextHint && (
+          <Animated.View entering={FadeInDown.delay(520).springify()} style={styles.hintCard}>
+            <Text style={styles.hintLabel}>Próximo logro</Text>
+            <Text style={styles.hintText}>
+              Te faltan <Text style={styles.hintBold}>{nextHint.remaining} {nextHint.unit}</Text> para "{nextHint.label}"
+            </Text>
+          </Animated.View>
+        )}
 
         <Animated.View entering={FadeInDown.delay(560).springify()}>
           <TouchableOpacity
@@ -368,5 +409,65 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 16,
     fontWeight: '700',
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  badge: {
+    backgroundColor: 'rgba(74,124,95,0.15)',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(74,124,95,0.3)',
+  },
+  badgeGold: {
+    backgroundColor: 'rgba(180,83,9,0.1)',
+    borderColor: 'rgba(180,83,9,0.3)',
+  },
+  badgeAmber: {
+    backgroundColor: 'rgba(212,130,26,0.1)',
+    borderColor: 'rgba(212,130,26,0.3)',
+  },
+  badgeSage: {
+    backgroundColor: 'rgba(220,100,20,0.1)',
+    borderColor: 'rgba(220,100,20,0.3)',
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: Colors.ink,
+    letterSpacing: 0.5,
+  },
+  hintCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 14,
+    padding: 14,
+    gap: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  hintLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#9a8f7e',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  hintText: {
+    fontSize: 13,
+    color: Colors.ink,
+    lineHeight: 19,
+  },
+  hintBold: {
+    fontWeight: '700',
+    color: Colors.amber,
   },
 });

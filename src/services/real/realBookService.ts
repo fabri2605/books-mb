@@ -25,4 +25,9 @@ export class RealBookService implements IBookService {
     const { data } = await this.client.post('/books/import', { externalId });
     return data;
   }
+
+  async getDailyBook(): Promise<Book> {
+    const { data } = await this.client.get('/books/daily');
+    return data;
+  }
 }

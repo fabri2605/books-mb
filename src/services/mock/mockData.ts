@@ -5,8 +5,10 @@ export const mockUser: User = {
   email: 'reader@example.com',
   displayName: 'Lector Ejemplo',
   avatarUrl: null,
+  username: 'lector_ejemplo',
   totalPoints: 42,
   booksCompleted: 5,
+  streakCount: 3,
   createdAt: '2025-01-15T10:00:00Z',
 };
 

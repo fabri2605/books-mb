@@ -1,5 +1,5 @@
 import { IQuizService } from '../interfaces/quizService';
-import { Question, QuizSubmission, QuizResult } from '../../types';
+import { Question, QuizSubmission, QuizResult, QuizStatus } from '../../types';
 import { mockQuestions, mockBooks } from './mockData';
 import { calculatePoints } from '../../utils/scoring';
 
@@ -12,7 +12,6 @@ export class MockQuizService implements IQuizService {
     if (!questions) {
       throw new Error(`No questions available for book ${bookId}`);
     }
-    // Return questions without correctOptionId (simulating server behavior)
     return questions.map(({ correctOptionId: _, ...q }) => q);
   }
 
@@ -45,5 +44,9 @@ export class MockQuizService implements IQuizService {
       difficulty: book.difficulty,
       answers: answersResult,
     };
+  }
+
+  async getQuizStatus(_bookId: string): Promise<QuizStatus> {
+    return { canAttempt: true, cooldownEndsAt: null, bestPoints: 0, isDailyBook: false };
   }
 }

@@ -6,7 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { RootStackParamList, Book } from '../types';
 import { useBooks } from '../hooks/useBooks';
 import { useAuthStore } from '../hooks/useAuthStore';
@@ -19,21 +19,49 @@ import TrendingCardSkeleton from '../components/TrendingCardSkeleton';
 import StreakModal from '../components/StreakModal';
 import { useStreak } from '../hooks/useStreak';
 import { Colors, Fonts } from '../theme';
-import { getLevelInfo, getLevelColor } from '../utils/scoring';
+import { getLevelInfo, getLevelColor, getStreakMultiplierLabel } from '../utils/scoring';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
+
+function useDailyCountdown() {
+  const [timeLeft, setTimeLeft] = useState('');
+  useEffect(() => {
+    function update() {
+      const now = new Date();
+      const midnight = new Date();
+      midnight.setHours(24, 0, 0, 0);
+      const diff = midnight.getTime() - now.getTime();
+      const h = Math.floor(diff / 3_600_000);
+      const m = Math.floor((diff % 3_600_000) / 60_000);
+      const s = Math.floor((diff % 60_000) / 1_000);
+      setTimeLeft(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`);
+    }
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, []);
+  return timeLeft;
+}
 
 export default function CatalogScreen() {
   const navigation = useNavigation<Nav>();
   const { books, loading, setSearch, difficulty, setDifficulty, includeExternal, setIncludeExternal } = useBooks();
   const user = useAuthStore((s) => s.user);
   const [importing, setImporting] = useState<string | null>(null);
+  const [dailyBook, setDailyBook] = useState<Book | null>(null);
   const { streak, showModal, closeModal } = useStreak();
+  const dailyCountdown = useDailyCountdown();
 
   const initial = user?.displayName?.[0]?.toUpperCase() ?? 'U';
   const totalPoints = user?.totalPoints ?? 0;
+  const streakCount = user?.streakCount ?? 0;
   const { level, xpProgress } = getLevelInfo(totalPoints);
   const levelColor = getLevelColor(level);
+  const streakMultLabel = getStreakMultiplierLabel(streakCount);
+
+  useEffect(() => {
+    bookService.getDailyBook().then(setDailyBook).catch(() => {});
+  }, []);
 
   const xpAnim = useSharedValue(0);
   const animatedXpStyle = useAnimatedStyle(() => ({ width: (xpAnim.value + '%') as any }));
@@ -155,6 +183,50 @@ export default function CatalogScreen() {
                 </Text>
               </TouchableOpacity>
             </View>
+
+            {/* Streak banner */}
+            {streakCount > 0 && (
+              <View style={styles.streakBanner}>
+                <Text style={styles.streakFire}>🔥</Text>
+                <View style={styles.streakInfo}>
+                  <Text style={styles.streakText}>{streakCount} {streakCount === 1 ? 'día' : 'días'} de racha</Text>
+                  {streakMultLabel && (
+                    <Text style={styles.streakMult}>{streakMultLabel} en puntos</Text>
+                  )}
+                </View>
+              </View>
+            )}
+
+            {/* Daily book */}
+            {dailyBook && (
+              <View style={styles.dailySection}>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>Libro del día ⭐</Text>
+                  <Text style={styles.dailyTimer}>{dailyCountdown}</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.dailyCard}
+                  onPress={() => navigation.navigate('BookDetail', { bookId: dailyBook.id })}
+                  activeOpacity={0.85}
+                >
+                  <LinearGradient
+                    colors={['#1a3a2a', '#2a5a3a']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.dailyCardGradient}
+                  >
+                    <View style={styles.dailyCardContent}>
+                      <View style={styles.dailyBadge}>
+                        <Text style={styles.dailyBadgeText}>2× PUNTOS</Text>
+                      </View>
+                      <Text style={styles.dailyTitle} numberOfLines={2}>{dailyBook.title}</Text>
+                      <Text style={styles.dailyAuthor}>{dailyBook.author}</Text>
+                    </View>
+                    <Text style={styles.dailyArrow}>→</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            )}
 
             {/* Trending section */}
             {(loading || trendingBooks.length > 0) && (
@@ -411,5 +483,94 @@ const styles = StyleSheet.create({
   row: {
     gap: 8,
     marginBottom: 14,
+  },
+  streakBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 18,
+    marginBottom: 8,
+    backgroundColor: 'rgba(212,130,26,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(212,130,26,0.2)',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 10,
+  },
+  streakFire: {
+    fontSize: 22,
+  },
+  streakInfo: {
+    flex: 1,
+  },
+  streakText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.ink,
+  },
+  streakMult: {
+    fontSize: 11,
+    color: Colors.amber,
+    fontWeight: '600',
+    marginTop: 1,
+  },
+  dailySection: {
+    marginBottom: 4,
+  },
+  dailyTimer: {
+    fontSize: 12,
+    fontFamily: Fonts.playfairBold,
+    color: Colors.amber,
+    letterSpacing: 0.5,
+  },
+  dailyCard: {
+    marginHorizontal: 18,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  dailyCardGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 12,
+  },
+  dailyCardContent: {
+    flex: 1,
+    gap: 4,
+  },
+  dailyBadge: {
+    backgroundColor: Colors.amber,
+    alignSelf: 'flex-start',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    marginBottom: 2,
+  },
+  dailyBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: Colors.white,
+    letterSpacing: 1,
+  },
+  dailyTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: Colors.cream,
+    lineHeight: 20,
+  },
+  dailyAuthor: {
+    fontSize: 12,
+    color: 'rgba(245,240,232,0.65)',
+  },
+  dailyArrow: {
+    fontSize: 20,
+    color: Colors.amberLight,
+    fontWeight: '700',
   },
 });

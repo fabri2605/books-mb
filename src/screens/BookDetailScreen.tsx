@@ -1,12 +1,13 @@
-import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, ScrollView, Image } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, ScrollView, Image, Modal, FlatList } from 'react-native';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useState, useEffect, useCallback } from 'react';
-import { RootStackParamList, Book, QuizStatus } from '../types';
-import { bookService, quizService } from '../services';
+import { RootStackParamList, Book, QuizStatus, PublicUser } from '../types';
+import { bookService, quizService, friendService, challengeService } from '../services';
 import { POINTS_PER_CORRECT } from '../utils/scoring';
 import DifficultyBadge from '../components/DifficultyBadge';
 import { Colors, coverColor } from '../theme';
+import { LinearGradient } from 'expo-linear-gradient';
 
 type RouteProps = NativeStackScreenProps<RootStackParamList, 'BookDetail'>['route'];
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -26,13 +27,25 @@ export default function BookDetailScreen() {
   const [book, setBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<QuizStatus | null>(null);
+  const [showChallengeModal, setShowChallengeModal] = useState(false);
+  const [friends, setFriends] = useState<PublicUser[]>([]);
+  const [challengingSent, setChallengingSent] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     bookService.getBookById(route.params.bookId).then((b) => {
       setBook(b);
       setLoading(false);
     });
+    friendService.getFriends().then(setFriends).catch(() => {});
   }, [route.params.bookId]);
+
+  const handleChallenge = useCallback(async (friendId: string) => {
+    if (!book) return;
+    setChallengingSent((prev) => new Set(prev).add(friendId));
+    try {
+      await challengeService.createChallenge(book.id, friendId);
+    } catch { /* already sent or error */ }
+  }, [book]);
 
   useFocusEffect(
     useCallback(() => {
@@ -89,6 +102,13 @@ export default function BookDetailScreen() {
           </View>
         )}
 
+        {/* Daily book indicator */}
+        {status?.isDailyBook && (
+          <View style={styles.dailyBanner}>
+            <Text style={styles.dailyBannerText}>⭐ Libro del día · 2× puntos hoy</Text>
+          </View>
+        )}
+
         <TouchableOpacity
           style={[styles.quizButton, !canAttempt && styles.quizButtonDisabled]}
           onPress={() => navigation.navigate('Quiz', { bookId: book.id })}
@@ -104,7 +124,62 @@ export default function BookDetailScreen() {
             </>
           )}
         </TouchableOpacity>
+
+        {/* Challenge a friend button */}
+        {friends.length > 0 && (
+          <TouchableOpacity
+            style={styles.challengeButton}
+            onPress={() => setShowChallengeModal(true)}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.challengeButtonText}>⚔️ Retar a un amigo</Text>
+          </TouchableOpacity>
+        )}
       </View>
+
+      {/* Challenge modal */}
+      <Modal
+        visible={showChallengeModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowChallengeModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowChallengeModal(false)}
+        />
+        <View style={styles.modalSheet}>
+          <View style={styles.modalHandle} />
+          <Text style={styles.modalTitle}>⚔️ Elegí un amigo para retar</Text>
+          <FlatList
+            data={friends}
+            keyExtractor={(f) => f.id}
+            renderItem={({ item }) => {
+              const sent = challengingSent.has(item.id);
+              return (
+                <View style={styles.friendRow}>
+                  <LinearGradient
+                    colors={[Colors.amber, Colors.amberLight]}
+                    style={styles.friendAvatar}
+                  >
+                    <Text style={styles.friendAvatarText}>{item.displayName[0]?.toUpperCase()}</Text>
+                  </LinearGradient>
+                  <Text style={styles.friendName}>{item.displayName}</Text>
+                  <TouchableOpacity
+                    style={[styles.challengeChip, sent && styles.challengeChipSent]}
+                    onPress={() => handleChallenge(item.id)}
+                    disabled={sent}
+                  >
+                    <Text style={styles.challengeChipText}>{sent ? '✓ Enviado' : 'Retar'}</Text>
+                  </TouchableOpacity>
+                </View>
+              );
+            }}
+            contentContainerStyle={{ paddingBottom: 20 }}
+          />
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -233,5 +308,98 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.7)',
     fontSize: 12,
     marginTop: 3,
+  },
+  dailyBanner: {
+    backgroundColor: 'rgba(212,130,26,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(212,130,26,0.3)',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  dailyBannerText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.amber,
+  },
+  challengeButton: {
+    borderWidth: 1.5,
+    borderColor: Colors.sage,
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+    backgroundColor: 'rgba(74,124,95,0.06)',
+  },
+  challengeButtonText: {
+    color: Colors.sage,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  modalSheet: {
+    backgroundColor: '#f5f0e7',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    padding: 24,
+    paddingBottom: 40,
+    maxHeight: '60%',
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#d0c8bc',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#1a1410',
+    marginBottom: 16,
+  },
+  friendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    gap: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e8e0d0',
+  },
+  friendAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  friendAvatarText: {
+    color: Colors.white,
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  friendName: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1a1410',
+  },
+  challengeChip: {
+    backgroundColor: Colors.sage,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+  },
+  challengeChipSent: {
+    backgroundColor: '#a0b0a0',
+  },
+  challengeChipText: {
+    color: Colors.white,
+    fontSize: 12,
+    fontWeight: '700',
   },
 });

@@ -12,6 +12,7 @@ export interface User {
   avatarUrl: string | null;
   totalPoints: number;
   booksCompleted: number;
+  streakCount: number;
   createdAt: string;
 }
 
@@ -78,12 +79,65 @@ export interface QuizResult {
   leveledUp?: boolean;
   newLevel?: number;
   bonusPoints?: number;
+  // Engagement bonuses
+  isPerfect?: boolean;
+  perfectBonus?: number;
+  isFirstQuiz?: boolean;
+  isDailyBook?: boolean;
+  streakCount?: number;
+  streakMultiplier?: number;
+  combinedMultiplier?: number;
+  challengeResult?: ChallengeResult | null;
 }
 
 export interface QuizStatus {
   canAttempt: boolean;
   cooldownEndsAt: string | null;
   bestPoints: number;
+  isDailyBook?: boolean;
+}
+
+export interface Challenge {
+  id: string;
+  challenger: PublicUser;
+  challenged: PublicUser;
+  book: { id: string; title: string; author: string; difficulty: Difficulty };
+  status: 'pending' | 'accepted' | 'completed' | 'declined' | 'expired';
+  challengerScore: number | null;
+  challengedScore: number | null;
+  winnerId: string | null;
+  expiresAt: string;
+  createdAt: string;
+}
+
+export interface ChallengeResult {
+  id: string;
+  winnerId: string | null;
+  challengerScore: number | null;
+  challengedScore: number | null;
+}
+
+export interface Achievement {
+  id: string;
+  icon: string;
+  label: string;
+  type: 'books' | 'points' | 'streak' | 'perfect';
+  req: number;
+  unlocked: boolean;
+}
+
+export interface AchievementNextHint {
+  achievementId: string;
+  label: string;
+  remaining: number;
+  unit: string;
+}
+
+export interface Season {
+  id: string;
+  name: string;
+  startsAt: string;
+  endsAt: string;
 }
 
 export interface LeaderboardEntry {

@@ -1,10 +1,12 @@
 import { StyleSheet, Text, View, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLeaderboard } from '../hooks/useLeaderboard';
 import { useAuthStore } from '../hooks/useAuthStore';
 import LeaderboardRow from '../components/LeaderboardRow';
 import { Colors, Fonts } from '../theme';
+import { leaderboardService, seasonService } from '../services';
+import { LeaderboardEntry, Season } from '../types';
 
 type Tab = 'global' | 'amigos' | 'mensual';
 
@@ -15,9 +17,34 @@ const TABS: { key: Tab; label: string }[] = [
 ];
 
 export default function LeaderboardScreen() {
-  const { entries, loading } = useLeaderboard();
+  const { entries: globalEntries, loading: globalLoading } = useLeaderboard();
   const userId = useAuthStore((s) => s.user?.id);
   const [activeTab, setActiveTab] = useState<Tab>('global');
+  const [friendEntries, setFriendEntries] = useState<LeaderboardEntry[]>([]);
+  const [monthlyEntries, setMonthlyEntries] = useState<LeaderboardEntry[]>([]);
+  const [currentSeason, setCurrentSeason] = useState<Season | null>(null);
+  const [tabLoading, setTabLoading] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'amigos') {
+      setTabLoading(true);
+      leaderboardService.getLeaderboard({ pageSize: 50, scope: 'friends' })
+        .then((r) => setFriendEntries(r.entries))
+        .catch(() => {})
+        .finally(() => setTabLoading(false));
+    } else if (activeTab === 'mensual') {
+      setTabLoading(true);
+      seasonService.getSeasonLeaderboard(1, 50)
+        .then((r) => { setMonthlyEntries(r.entries); setCurrentSeason(r.season); })
+        .catch(() => {})
+        .finally(() => setTabLoading(false));
+    }
+  }, [activeTab]);
+
+  const entries = activeTab === 'global' ? globalEntries
+    : activeTab === 'amigos' ? friendEntries
+    : monthlyEntries;
+  const loading = activeTab === 'global' ? globalLoading : tabLoading;
 
   const showPodium = entries.length >= 3;
   const top3 = entries.slice(0, 3);
@@ -41,7 +68,9 @@ export default function LeaderboardScreen() {
         style={styles.hero}
       >
         <Text style={styles.heroTitle}>Tabla de Posiciones</Text>
-        <Text style={styles.heroSubtitle}>Semana actual · Top 100</Text>
+        <Text style={styles.heroSubtitle}>
+          {activeTab === 'mensual' && currentSeason ? `${currentSeason.name} · Temporada` : 'Global · Top 100'}
+        </Text>
 
         {showPodium && (
           <View style={styles.podium}>

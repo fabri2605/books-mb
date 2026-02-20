@@ -1,13 +1,13 @@
 import {
   StyleSheet, View, Text, TextInput, TouchableOpacity,
-  FlatList, ActivityIndicator, KeyboardAvoidingView, Platform,
+  FlatList, ActivityIndicator, KeyboardAvoidingView, Platform, SectionList,
 } from 'react-native';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList, PublicUser } from '../types';
-import { friendService } from '../services';
+import { RootStackParamList, PublicUser, Challenge } from '../types';
+import { friendService, challengeService } from '../services';
 import { useFriends } from '../hooks/useFriends';
 import { Colors, Fonts } from '../theme';
 
@@ -56,6 +56,22 @@ export default function FriendsScreen() {
   const [searching, setSearching] = useState(false);
   const [sendingTo, setSendingTo] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<Set<string>>(new Set());
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [challengesLoading, setChallengesLoading] = useState(false);
+
+  const refreshChallenges = useCallback(async () => {
+    setChallengesLoading(true);
+    try {
+      const data = await challengeService.listChallenges();
+      setChallenges(data);
+    } catch { /* ignore */ }
+    finally { setChallengesLoading(false); }
+  }, []);
+
+  useFocusEffect(useCallback(() => { refreshChallenges(); }, [refreshChallenges]));
+
+  const pendingChallenges = challenges.filter((c) => c.status === 'pending' || c.status === 'accepted');
+  const completedChallenges = challenges.filter((c) => c.status === 'completed').slice(0, 5);
 
   const handleSearch = useCallback(async (text: string) => {
     setQuery(text);
@@ -199,6 +215,33 @@ export default function FriendsScreen() {
             refreshing={loading}
             ListHeaderComponent={
               <>
+                {/* Active challenges */}
+                {pendingChallenges.length > 0 && (
+                  <View style={styles.requestsSection}>
+                    <Text style={styles.sectionTitle}>Retos activos ⚔️ ({pendingChallenges.length})</Text>
+                    {pendingChallenges.map((c) => {
+                      const isChallenger = c.challenger.id !== undefined;
+                      const opponent = c.challenger;
+                      const statusLabel = c.status === 'pending' ? 'Pendiente' : 'En curso';
+                      return (
+                        <View key={c.id} style={styles.challengeRow}>
+                          <Text style={styles.challengeBook} numberOfLines={1}>{c.book.title}</Text>
+                          <Text style={styles.challengeMeta}>
+                            vs {c.challenged.displayName} · {statusLabel}
+                          </Text>
+                          {c.status === 'pending' && c.challenged.id !== undefined && (
+                            <TouchableOpacity
+                              style={[styles.chip, styles.chipGray]}
+                              onPress={() => challengeService.declineChallenge(c.id).then(refreshChallenges)}
+                            >
+                              <Text style={styles.chipText}>Declinar</Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
                 {/* Incoming requests */}
                 {requests.length > 0 && (
                   <View style={styles.requestsSection}>
@@ -386,5 +429,26 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 20,
     marginTop: 32,
+  },
+  challengeRow: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+    gap: 4,
+  },
+  challengeBook: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#1a1410',
+  },
+  challengeMeta: {
+    fontSize: 11,
+    color: '#9a8868',
   },
 });

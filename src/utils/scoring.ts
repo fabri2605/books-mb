@@ -66,6 +66,14 @@ export interface LevelInfo {
  *   Lv 3 → 4 : 225 pts  (25 × 3²)
  *   Lv 4 → 5 : 400 pts  (25 × 4²)  … and so on.
  */
+/** Returns a human-readable multiplier label for display, or null if streak has no bonus. */
+export function getStreakMultiplierLabel(streak: number): string | null {
+  if (streak >= 30) return '2×';
+  if (streak >= 7)  return '1.5×';
+  if (streak >= 3)  return '1.25×';
+  return null;
+}
+
 export function getLevelInfo(totalPoints: number): LevelInfo {
   let level = 1;
   let accumulated = 0;

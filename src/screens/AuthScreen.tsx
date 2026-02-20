@@ -16,7 +16,7 @@ export default function AuthScreen() {
         <View style={styles.iconWrap}>
           <Text style={styles.iconText}>📖</Text>
         </View>
-        <Text style={styles.heroTitle}>BookQuest</Text>
+        <Text style={styles.heroTitle}>BookBrawl</Text>
         <Text style={styles.heroTagline}>LEE · APRENDE · COMPITE</Text>
       </View>
 

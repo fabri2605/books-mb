@@ -39,4 +39,12 @@ export class MockBookService implements IBookService {
     if (!book) throw new Error(`Book ${bookId} not found`);
     return book;
   }
+
+  async importBook(_externalId: string): Promise<Book> {
+    throw new Error('Not implemented in mock');
+  }
+
+  async getDailyBook(): Promise<Book> {
+    return mockBooks[0];
+  }
 }

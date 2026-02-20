@@ -10,7 +10,7 @@ export class RealQuizService implements IQuizService {
     return data;
   }
 
-  async submitQuiz(submission: QuizSubmission): Promise<QuizResult> {
+  async submitQuiz(submission: QuizSubmission & { challengeId?: string }): Promise<QuizResult> {
     const { data } = await this.client.post('/quiz/submit', submission);
     return data;
   }

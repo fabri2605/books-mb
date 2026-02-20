@@ -1,7 +1,9 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { useAuthStore } from '../hooks/useAuthStore';
+import { usePushNotifications } from '../hooks/usePushNotifications';
 import AuthScreen from '../screens/AuthScreen';
+import SplashScreen from '../screens/SplashScreen';
 import MainTabs from './MainTabs';
 import BookDetailScreen from '../screens/BookDetailScreen';
 import QuizScreen from '../screens/QuizScreen';
@@ -14,6 +16,12 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function RootNavigator() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const needsUsernameSetup = useAuthStore((s) => s.needsUsernameSetup);
+  const hasHydrated = useAuthStore((s) => s._hasHydrated);
+  usePushNotifications();
+
+  if (!hasHydrated) {
+    return <SplashScreen />;
+  }
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>

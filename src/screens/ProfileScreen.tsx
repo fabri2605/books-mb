@@ -11,32 +11,10 @@ import { useLeaderboard } from '../hooks/useLeaderboard';
 import { userService } from '../services';
 import ProceduralCover from '../components/ProceduralCover';
 import { Colors, Fonts } from '../theme';
-import { Difficulty } from '../types';
+import { Difficulty, Achievement, AchievementNextHint } from '../types';
 import { getLevelInfo, getLevelColor } from '../utils/scoring';
 
 const USERNAME_RE = /^[a-z0-9_]{3,30}$/;
-
-type AchievementDef = {
-  id: string;
-  icon: string;
-  label: string;
-  type: 'books' | 'points';
-  req: number;
-};
-
-const ACHIEVEMENTS: AchievementDef[] = [
-  { id: 'b1', icon: '📖', label: 'Primera página', type: 'books', req: 1 },
-  { id: 'b2', icon: '📚', label: 'Bibliófilo',     type: 'books', req: 5 },
-  { id: 'b3', icon: '🌿', label: 'Constante',       type: 'books', req: 10 },
-  { id: 'b4', icon: '🌍', label: 'Gran lector',     type: 'books', req: 25 },
-  { id: 'b5', icon: '🦉', label: 'Erudito',         type: 'books', req: 50 },
-  { id: 'b6', icon: '👑', label: 'Maestro',         type: 'books', req: 100 },
-  { id: 'p1', icon: '⚡', label: 'Acumulador',      type: 'points', req: 50 },
-  { id: 'p2', icon: '🔥', label: 'En racha',        type: 'points', req: 200 },
-  { id: 'p3', icon: '💎', label: 'Diamante',        type: 'points', req: 500 },
-  { id: 'p4', icon: '🏆', label: 'Campeón',         type: 'points', req: 1000 },
-  { id: 'p5', icon: '🚀', label: 'Leyenda',         type: 'points', req: 5000 },
-];
 
 // Placeholder recent reads — replace with real data when backend supports it
 const RECENT_READS = [
@@ -49,6 +27,9 @@ export default function ProfileScreen() {
   const setUser = useAuthStore((s) => s.setUser);
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const { entries } = useLeaderboard();
+
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [nextHint, setNextHint] = useState<AchievementNextHint | null>(null);
 
   const [editingUsername, setEditingUsername] = useState(false);
   const [editValue, setEditValue] = useState('');
@@ -95,15 +76,16 @@ export default function ProfileScreen() {
   useFocusEffect(useCallback(() => {
     xpAnim.value = 0;
     xpAnim.value = withTiming(Math.max(2, xpProgress * 100), { duration: 900 });
+    userService.getAchievements().then((r) => {
+      setAchievements(r.achievements);
+      setNextHint(r.nextHint ?? null);
+    }).catch(() => {});
   }, [xpProgress]));
   const accuracy = booksCompleted ? Math.min(99, 70 + booksCompleted * 2) : 0;
 
   const myRank = entries.find((e) => e.userId === user?.id)?.rank ?? null;
 
-  const isUnlocked = (a: AchievementDef) =>
-    a.type === 'books'
-      ? booksCompleted >= a.req
-      : totalPoints >= a.req;
+
 
   return (
     <View style={styles.container}>
@@ -181,19 +163,23 @@ export default function ProfileScreen() {
         {/* Achievements */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Logros 🎖️</Text>
+          {nextHint && (
+            <View style={styles.nextHintRow}>
+              <Text style={styles.nextHintText}>
+                Te faltan <Text style={styles.nextHintBold}>{nextHint.remaining} {nextHint.unit}</Text> para "{nextHint.label}"
+              </Text>
+            </View>
+          )}
           <View style={styles.achieveGrid}>
-            {ACHIEVEMENTS.map((a) => {
-              const unlocked = isUnlocked(a);
-              return (
-                <View
-                  key={a.id}
-                  style={[styles.achieveItem, unlocked ? styles.achieveUnlocked : styles.achieveLocked]}
-                >
-                  <Text style={styles.achieveIcon}>{a.icon}</Text>
-                  <Text style={styles.achieveLabel}>{a.label}</Text>
-                </View>
-              );
-            })}
+            {achievements.map((a) => (
+              <View
+                key={a.id}
+                style={[styles.achieveItem, a.unlocked ? styles.achieveUnlocked : styles.achieveLocked]}
+              >
+                <Text style={styles.achieveIcon}>{a.icon}</Text>
+                <Text style={styles.achieveLabel}>{a.label}</Text>
+              </View>
+            ))}
           </View>
         </View>
 
@@ -531,6 +517,24 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.playfairBold,
     fontSize: 16,
     color: Colors.sage,
+  },
+  nextHintRow: {
+    backgroundColor: 'rgba(212,130,26,0.07)',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(212,130,26,0.15)',
+  },
+  nextHintText: {
+    fontSize: 12,
+    color: '#7a6f5e',
+    lineHeight: 18,
+  },
+  nextHintBold: {
+    fontWeight: '700',
+    color: Colors.amber,
   },
   signOutBtn: {
     borderWidth: 1.5,
