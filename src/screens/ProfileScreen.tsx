@@ -46,10 +46,9 @@ export default function ProfileScreen() {
         {
           text: 'Salir',
           style: 'destructive',
-          onPress: async () => {
-            setSigningOut(true);
-            try { await authService.signOut(); } catch {}
+          onPress: () => {
             clearAuth();
+            authService.signOut().catch(() => {});
           },
         },
       ],
