@@ -1,14 +1,13 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Constants from 'expo-constants';
 
 const getApiBaseUrl = (): string => {
-  if (__DEV__) {
-    const hostUri = Constants.expoConfig?.hostUri;
-    const host = hostUri?.split(':')[0];
-    if (host) return `http://${host}:5000`;
-  }
-  return 'http://192.168.54.172:5000'; // fallback / producción
+  // if (__DEV__) {
+  //   const hostUri = Constants.expoConfig?.hostUri;
+  //   const host = hostUri?.split(':')[0];
+  //   if (host) return `http://${host}:5000`;
+  // }
+  return 'http://204.168.134.3/books-api';
 };
 
 const API_BASE_URL = getApiBaseUrl();

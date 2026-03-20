@@ -1,6 +1,6 @@
 import {
   StyleSheet, Text, View, TouchableOpacity, ScrollView,
-  Modal, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform,
+  Modal, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform, Alert,
 } from 'react-native';
 import { useState, useCallback } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -8,7 +8,7 @@ import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-na
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuthStore } from '../hooks/useAuthStore';
 import { useLeaderboard } from '../hooks/useLeaderboard';
-import { userService } from '../services';
+import { userService, authService } from '../services';
 import ProceduralCover from '../components/ProceduralCover';
 import { Colors, Fonts } from '../theme';
 import { Difficulty, Achievement, AchievementNextHint } from '../types';
@@ -31,10 +31,30 @@ export default function ProfileScreen() {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [nextHint, setNextHint] = useState<AchievementNextHint | null>(null);
 
+  const [signingOut, setSigningOut] = useState(false);
   const [editingUsername, setEditingUsername] = useState(false);
   const [editValue, setEditValue] = useState('');
   const [editError, setEditError] = useState('');
   const [editLoading, setEditLoading] = useState(false);
+
+  const handleSignOut = useCallback(() => {
+    Alert.alert(
+      'Cerrar sesión',
+      '¿Estás seguro de que quieres salir?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Salir',
+          style: 'destructive',
+          onPress: async () => {
+            setSigningOut(true);
+            try { await authService.signOut(); } catch {}
+            clearAuth();
+          },
+        },
+      ],
+    );
+  }, [clearAuth]);
 
   const openUsernameEdit = useCallback(() => {
     setEditValue(user?.username ?? '');
@@ -202,8 +222,11 @@ export default function ProfileScreen() {
         </View>
 
         {/* Sign out */}
-        <TouchableOpacity style={styles.signOutBtn} onPress={clearAuth}>
-          <Text style={styles.signOutText}>Cerrar sesión</Text>
+        <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut} disabled={signingOut}>
+          {signingOut
+            ? <ActivityIndicator size="small" color="#7a6f5e" />
+            : <Text style={styles.signOutText}>Cerrar sesión</Text>
+          }
         </TouchableOpacity>
       </ScrollView>
 
