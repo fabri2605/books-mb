@@ -1,16 +1,7 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const getApiBaseUrl = (): string => {
-  // if (__DEV__) {
-  //   const hostUri = Constants.expoConfig?.hostUri;
-  //   const host = hostUri?.split(':')[0];
-  //   if (host) return `http://${host}:5000`;
-  // }
-  return 'http://204.168.134.3/books-api';
-};
-
-const API_BASE_URL = getApiBaseUrl();
+const API_BASE_URL = /* process.env.EXPO_PUBLIC_API_URL ?? */ 'http://204.168.134.3/books-api';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
